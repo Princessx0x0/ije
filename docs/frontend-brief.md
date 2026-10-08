@@ -26,3 +26,16 @@
 - Deployed to Cloud Run (us-central1), private, with its own service account.
 - The browser never calls Agent Runtime directly; a Next.js server route adds the token.
 - Agent: projects/788712976210/locations/us-central1/reasoningEngines/2768957581710852096
+
+## Production standard (non-negotiable)
+Build for real users from the first line. No demo stubs, mock auth or placeholder identities.
+- Auth is real Firebase Authentication: email and password, Google, and anonymous (guest)
+  accounts that can be upgraded without losing data.
+- No hard-coded user IDs anywhere (no "demo_user", "demo-user" or "devcamp-user").
+- The user's identity comes only from a Firebase ID token verified on the server. Never trust
+  a user ID sent by the browser or written by the model.
+- The agent must receive the verified user ID from the server-side route, and use it as the
+  session user ID, so each user only ever sees their own sessions and trips.
+- Delete account removes the Firebase user and every stored record for that user.
+- No third-party service receives conversation data unless an ADR approves it (see ADR 004).
+- Secrets live in Secret Manager, never in code, images or committed files.

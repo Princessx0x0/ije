@@ -1,6 +1,6 @@
 # ADR 001: Use CopilotKit managed Intelligence during development
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR 004
 - **Date:** 2026-10-07
 
 ## Context
