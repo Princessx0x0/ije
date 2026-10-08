@@ -137,7 +137,7 @@ adk_ije_agent = ADKAgent(
 )
 
 app = FastAPI(title="Ije Agent")
-add_adk_fastapi_endpoint(app, adk_ije_agent, path="/")
+add_adk_fastapi_endpoint(app, adk_ije_agent, path="/api/adk")
 
 
 @app.get("/health")
