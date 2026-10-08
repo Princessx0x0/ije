@@ -1,0 +1,217 @@
+/*
+ * Ije components. Plain CSS over the tokens in tokens.css; published unchanged
+ * as the design system's components/bundle.css, so the app and the system
+ * cannot drift. Rules: no borders on cards, 8px spacing scale only, one
+ * action colour (primary), shadows instead of strokes.
+ */
+
+/* ---------- Focus: one ring for everything ---------- */
+.ije-button:focus-visible,
+.ije-chip:focus-visible,
+.ije-link:focus-visible,
+.ije-segmented__option:focus-visible,
+.ije-field__input:focus-visible,
+.ije-slider:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Button ---------- */
+.ije-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  min-height: var(--space-48);
+  padding: 0 var(--space-24);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.ije-button:hover { background: var(--primary-hover); }
+.ije-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.ije-button--secondary { background: var(--inset); color: var(--ink); }
+.ije-button--secondary:hover { background: var(--track); }
+.ije-button--raised { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-raised); }
+.ije-button--raised:hover { background: var(--surface); color: var(--primary-hover); }
+.ije-button--danger { background: var(--danger); color: var(--surface); }
+.ije-button--danger:hover { background: var(--danger); opacity: 0.9; }
+.ije-button--block { width: 100%; }
+.ije-button--icon { width: var(--space-48); padding: 0; }
+
+/* ---------- Link (text button) ---------- */
+.ije-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--space-48);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.ije-link:hover { color: var(--primary-hover); }
+/* Inside a line of text (a card's source): inherits the text size, no tall hit area. */
+.ije-link--inline { min-height: 0; display: inline; font-size: inherit; line-height: inherit; }
+.ije-link:disabled { color: var(--ink-muted); cursor: not-allowed; }
+
+/* ---------- Card ---------- */
+.ije-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-32);
+  border-radius: var(--radius-24);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-card);
+}
+.ije-card--roomy { padding: var(--space-40); gap: var(--space-32); }
+.ije-card--inset { background: var(--inset); box-shadow: none; padding: var(--space-24); border-radius: var(--radius-16); }
+
+/* ---------- Chip (toggle) ---------- */
+.ije-chips { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.ije-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--space-48);
+  padding: 0 var(--space-24);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--inset);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.ije-chip:hover { background: var(--track); }
+.ije-chip[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); font-weight: 700; }
+.ije-chip[aria-pressed="true"]:hover { background: var(--primary-hover); }
+
+/* ---------- Badge ---------- */
+.ije-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--space-16);
+  border-radius: var(--radius-16);
+  background: var(--inset);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ije-badge--local { background: var(--local-soft); color: var(--on-local-soft); }
+.ije-badge--calm { background: var(--primary-soft); color: var(--on-primary-soft); }
+
+/* ---------- Field ---------- */
+.ije-field { display: flex; flex-direction: column; gap: var(--space-8); }
+.ije-field__label { font-family: var(--font-text); font-size: 16px; line-height: 24px; font-weight: 700; color: var(--ink); }
+.ije-field__hint { font-family: var(--font-text); font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+.ije-field__input {
+  min-height: var(--space-48);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0 var(--space-16);
+  border: 0;
+  border-radius: var(--radius-16);
+  background: var(--inset);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 24px;
+}
+.ije-field__error { margin: 0; font-family: var(--font-text); font-size: 14px; line-height: 20px; font-weight: 700; color: var(--danger); }
+.ije-field__input::placeholder { color: var(--ink-muted); }
+.ije-field__input[aria-invalid="true"] { outline: 2px solid var(--danger); outline-offset: 2px; }
+
+/* ---------- Slider (vibe) ---------- */
+.ije-vibe { display: flex; flex-direction: column; gap: var(--space-16); }
+.ije-vibe__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-16); }
+.ije-vibe__value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+  color: var(--primary);
+}
+.ije-vibe__ends { display: flex; justify-content: space-between; font-family: var(--font-text); font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+.ije-slider {
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  background: transparent;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* ---------- Segmented control ---------- */
+.ije-segmented {
+  display: inline-flex;
+  gap: var(--space-8);
+  padding: var(--space-8);
+  border-radius: var(--radius-pill);
+  background: var(--inset);
+}
+.ije-segmented__option {
+  min-height: 40px;
+  padding: 0 var(--space-24);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink-muted);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.ije-segmented__option[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: var(--shadow-raised); }
+
+/* ---------- Notice ---------- */
+.ije-notice {
+  margin: 0;
+  padding: var(--space-16);
+  border-radius: var(--radius-16);
+  background: var(--inset);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 24px;
+}
+.ije-notice--error { background: var(--danger-soft); color: var(--danger); font-weight: 700; }
+.ije-notice--success { background: var(--primary-soft); color: var(--on-primary-soft); }
+
+/* ---------- Divider (text, no rule) ---------- */
+.ije-or {
+  display: flex;
+  justify-content: center;
+  font-family: var(--font-text);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ije-button { transition: none; }
+}

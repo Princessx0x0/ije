@@ -1,37 +1,105 @@
 @import "tailwindcss";
+@import "../styles/tokens.css";
+@import "../styles/components.css";
 
+/* Self-hosted variable faces (imported in layout.tsx). tokens.css builds
+   --font-display and --font-text on top of these. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-newsreader: "Newsreader Variable";
+  --font-atkinson: "Atkinson Hyperlegible Next Variable";
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-/* adk's CopilotSidebar (CopilotKit's V2 chat) stays LIGHT regardless of the OS
-   color scheme, so the threads layout is held light too — otherwise it would
-   clash with the sidebar it sits beside. The SDK <CopilotThreadsDrawer> reads
-   --foreground/--background by token inheritance; re-pinning them here keeps the
-   panel readable without affecting the demo content. The confirm dialog renders
-   in a portal on <body>, so re-pin there as well. Values mirror the V2 light
-   theme (oklch(0.145 0 0) / oklch(1 0 0)). */
-.threadsLayout,
-body > [role="presentation"] {
-  --foreground: oklch(0.145 0 0);
-  --background: oklch(1 0 0);
+/* ---------- Base ---------- */
+html,
+body {
+  min-height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 24px;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
 }
 
-body,
-html {
-  height: 100%;
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--primary);
+}
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* ---------- App layout: status and sign-in ---------- */
+.ije-status {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: var(--space-64) var(--space-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+.ije-status h1 {
+  font-size: 48px;
+  line-height: 52px;
+  font-variation-settings: "opsz" 48;
+}
+
+.ije-auth {
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-48) var(--space-16);
+}
+.ije-auth__card {
+  width: 100%;
+  max-width: 440px;
+  box-sizing: border-box;
+}
+.ije-auth__card h1 {
+  font-size: 32px;
+  line-height: 40px;
+  font-variation-settings: "opsz" 32;
+}
+.ije-auth__lede {
+  color: var(--ink-muted);
+  font-size: 18px;
+  line-height: 28px;
+}
+.ije-auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+}
+.ije-auth__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-8) var(--space-16);
+}
+.ije-auth__guest {
+  align-self: center;
+}
+.ije-auth__fine {
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 20px;
 }
