@@ -1,8 +1,13 @@
 import { HttpAgent } from "@ag-ui/client";
 
-/** Builds this starter's agent. See channel-host.mts for why this is shared. */
+/**
+ * CopilotKit always talks to this app's own /api/adk proxy route, which adds
+ * Google credentials server-side and forwards to the agent (local or Agent
+ * Runtime). See src/app/api/adk/route.ts.
+ */
 export function createDefaultAgent(): HttpAgent {
+  const port = process.env.PORT ?? "3000";
   return new HttpAgent({
-    url: process.env.AGENT_URL || "http://localhost:8000/api/adk",
+    url: `http://127.0.0.1:${port}/api/adk`,
   });
 }
