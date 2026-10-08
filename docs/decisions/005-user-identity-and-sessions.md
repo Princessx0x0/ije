@@ -40,3 +40,14 @@ unauthenticated ingress. Browsers cannot present Google IAM credentials.
   still needed before launch.
 - Local development requires a real Firebase sign-in; there is no bypass.
 - The Agent Identity needs `roles/firebaseauth.viewer` for revocation checks.
+
+## Addendum: Firestore region
+
+- Firestore (native mode) is created in `us-central1`, the same region as Agent
+  Runtime and Agent Platform Sessions.
+- Session state already holds a copy of the persona in the US, so a UK Firestore
+  would split the data across two regions without keeping it in the UK.
+- All user data, including health-related persona details, is therefore stored in
+  the US. The privacy policy must say so.
+- Before launching to real UK users: confirm the lawful basis for the UK to US
+  transfer, and record it in the privacy policy.

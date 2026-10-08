@@ -78,3 +78,4 @@ Firestore security rules are what protect the data.
   with `roles/aiplatform.user`, `roles/firebaseauth.admin`, `roles/datastore.user`.
 - Local development uses Application Default Credentials (`gcloud auth
   application-default login`); there are no API keys anywhere.
+- Firestore: native mode, `us-central1`, data under `users/{uid}`.
