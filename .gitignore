@@ -49,3 +49,9 @@ agent/__pycache__/
 agent/.venv/.copilotkit/
 .copilotkit/
 !.env.example
+
+# frontend (patterns without a leading slash match in any folder)
+node_modules/
+.next/
+out/
+next-env.d.ts

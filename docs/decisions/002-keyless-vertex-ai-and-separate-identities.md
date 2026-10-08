@@ -1,6 +1,6 @@
 # ADR 002: Keyless Vertex AI access and separate build/runtime identities
 
-- **Status:** Accepted
+- **Status:** Accepted, amended by ADR 003
 - **Date:** 2026-10-08
 
 ## Context
@@ -21,7 +21,7 @@ roles automatically, so build permissions must be granted explicitly.
 
 - In Cloud Run, the agent calls Gemini through Vertex AI using a dedicated
   service account, `ije-agent`, with only `roles/aiplatform.user`. No API
-  key is used in the cloud. Local development still uses a key in `.env`.
+  key is used in the cloud. Local development uses Application Default Credentials (no key).
 - Builds run as the default compute service account with only
   `roles/run.builder`.
 - Each identity is limited to its own job: the build identity cannot call
