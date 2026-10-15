@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState, type FormEvent } from "react";
 
@@ -182,6 +183,12 @@ function SignIn() {
 
         {isGuest && mode === "signIn" && (
           <p className="ije-notice">Signing into another account leaves this guest session and its trips behind.</p>
+        )}
+
+        {isGuest && (
+          <Link href={next} className="ije-link ije-auth__guest">
+            Not now, keep planning as a guest
+          </Link>
         )}
 
         {!isGuest && (

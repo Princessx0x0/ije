@@ -212,6 +212,74 @@
   color: var(--ink-muted);
 }
 
+/* ---------- Fieldset (a group of chips or segments) ---------- */
+.ije-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ije-fieldset > legend { padding: 0; margin-bottom: var(--space-8); }
+
+/* ---------- Check (consent: a real checkbox, never a chip) ---------- */
+.ije-check { display: flex; align-items: flex-start; gap: var(--space-16); }
+.ije-check__input {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 12px 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.ije-check__input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.ije-check__label {
+  display: flex;
+  align-items: center;
+  min-height: var(--space-48);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+/* ---------- Card text ---------- */
+.ije-card__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  font-variation-settings: "opsz" 22;
+}
+.ije-caption { font-family: var(--font-text); font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+
+/* ---------- Menu (account) ---------- */
+.ije-menu { position: relative; }
+.ije-menu__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-8));
+  z-index: 10;
+  width: min(320px, calc(100vw - var(--space-32)));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-8);
+  padding: var(--space-24);
+  border-radius: var(--radius-24);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-card);
+}
+.ije-menu__panel > .ije-card { align-self: stretch; gap: var(--space-8); }
+.ije-menu__who { font-family: var(--font-text); font-size: 14px; line-height: 20px; font-weight: 700; color: var(--ink-muted); overflow-wrap: anywhere; }
+.ije-menu__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-16); }
+
 @media (prefers-reduced-motion: reduce) {
   .ije-button { transition: none; }
 }

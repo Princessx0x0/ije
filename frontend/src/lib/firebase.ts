@@ -2,6 +2,7 @@
 
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 /**
  * Firebase web config. These values identify the project; they are not
@@ -42,4 +43,12 @@ let authInstance: Auth | undefined;
 export function firebaseAuth(): Auth {
   authInstance ??= getAuth(firebaseApp());
   return authInstance;
+}
+
+let firestoreInstance: Firestore | undefined;
+
+/** The browser's Firestore instance. Security rules limit each user to users/{uid}. */
+export function firestore(): Firestore {
+  firestoreInstance ??= getFirestore(firebaseApp());
+  return firestoreInstance;
 }
