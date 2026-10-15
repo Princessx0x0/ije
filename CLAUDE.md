@@ -46,7 +46,28 @@ ADRs live in `docs/decisions/`. Read the relevant one before touching identity, 
 - Agent Identity token binding is switched off on the deployed agent (ADR 008, `GOOGLE_API_ENABLE_RUNTIME_BOUND_TOKEN=false`) because `firebase-admin` and `agent/tools/maps.py` send plain bearer tokens. Tracked follow-up: move those calls to mTLS, then remove the opt-out.
 - On Agent Runtime `GOOGLE_CLOUD_PROJECT` is the project number; the Firebase project comes from `FIREBASE_PROJECT_ID`.
 - Known limits: chat history is not restored after a reload; the itinerary and stays are. Weather shows only after a run in the current session.
-- Then: PDF export, stays, delete account (order in `docs/backend-contract.md`). The privacy policy page waits for the governance phase: see `docs/privacy-governance.md`, and keep it current as features change what data is collected or where it goes.
+- Not built yet: delete account (order in `docs/backend-contract.md`), PDF export, the privacy policy page (waits for `docs/privacy-governance.md`; keep that worksheet current as features change the data).
+
+## Where we stopped (2026-10-15)
+
+- **Live:** frontend https://ije-frontend-788712976210.us-central1.run.app (Cloud Run `ije-frontend`); agent on Agent Runtime engine `2768957581710852096`. A full itinerary was produced end to end on the live site.
+- **What changed and why:** `docs/changes/2026-10-15.md` (and the plain-language PDF beside it). Decisions: ADRs 001 to 008 in `docs/decisions/`. Read these before revisiting any of those choices.
+- **Evals at the bar:** see `tests/eval/README.md`. Re-run before any agent deploy.
+- **Branches:** PRs #1 to #3 are stacked (merge in order). Until merged, `main` does not have this file's current content.
+
+## Next: prepare for real users
+
+Do these before inviting real users, roughly in this order. Each needs the user's go-ahead where it changes cloud resources or deploys.
+
+1. **Secrets hygiene:** remove the unused CopilotKit keys in `agent/.env` and the `GOOGLE_API_KEY` in `frontend/.env`, then revoke them.
+2. **Delete account** (UK GDPR erasure, `docs/backend-contract.md` order): agent sessions, then Firestore `users/{uid}`, then the Firebase user.
+3. **Governance decisions and privacy page:** controller, lawful basis, UK transfer mechanism (covering global Gemini processing, ADR 007), retention, DPIA. Then write the page and link it from onboarding, the trip form and the account menu.
+4. **Abuse and cost controls:** rate limiting on `/api/adk` and `/api/places` (ADR 005), a Maps Platform budget alert, and quota caps.
+5. **Restore token binding** (ADR 008 follow-up): move the Firebase revocation check and `agent/tools/maps.py` to mTLS, then remove `GOOGLE_API_ENABLE_RUNTIME_BOUND_TOKEN=false`.
+6. **Reliability:** monitoring and alerts on agent errors and Places 4xx/5xx (see the Agent Runtime notes in docs), and min instances to avoid cold starts.
+7. **Optimisation:** planning latency (about 40 s for 3 days), prompt and context size, fewer search calls, page performance.
+8. **Product gaps:** restore chat history after reload, show weather without a new run, PDF export.
+9. **Quality gates:** run the evals and rules tests in CI, and add eval cases for each new behaviour.
 
 ## Agent commands (run at the repo root)
 
