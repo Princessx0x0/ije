@@ -30,7 +30,7 @@ category data.
 | --- | --- | --- |
 | Firestore (Google Cloud) | Durable persona and trips | `us-central1` (ADR 005 addendum) |
 | Agent Platform Sessions (Google Cloud) | Agent working memory, chat history | `us-central1` |
-| Vertex AI Gemini (Google Cloud) | Generating itineraries | **Open:** the local `agent/.env` uses `GOOGLE_CLOUD_LOCATION=global`, and the deploy script sets no location, so prompts may not stay in `us-central1`. Decide and pin it. |
+| Vertex AI Gemini (Google Cloud) | Generating itineraries | **Global endpoint (ADR 007):** prompts may be processed in any Google region. Nothing is stored there; sessions and Firestore stay in `us-central1`. |
 | Google Maps Platform: Places API, Weather API (ADR 006) | Real places, stays, forecasts | Global service. Receives the destination, trip dates (weather), and search text that includes diet, allergy and access needs (for example "halal restaurant peanut-free"). |
 | Firebase Authentication | Accounts | Not region-selectable; confirm with Google |
 | Cloud Run (Google Cloud) | Frontend, request logs | `us-central1` |
