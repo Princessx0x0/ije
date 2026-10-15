@@ -11,10 +11,12 @@ import { LoadError, Loading, PROFILE_LOAD_ERROR } from "@/components/profile/Loa
 import { useProfile } from "@/components/profile/useProfile";
 import { ChatPanel } from "@/components/trip/ChatPanel";
 import { Itinerary } from "@/components/trip/Itinerary";
+import { Stays } from "@/components/trip/Stays";
+import { usePlaces } from "@/components/trip/usePlaces";
 import { useTripAgent } from "@/components/trip/useTripAgent";
-import { formatDates, formatMoney } from "@/lib/format";
-import { loadTrip, saveItinerary, type SavedTrip } from "@/lib/profile";
-import type { ItineraryItem, Persona } from "@/lib/schema";
+import { forecastOpens, formatDates, formatDay, formatMoney } from "@/lib/format";
+import { loadTrip, saveItinerary, saveStays, type SavedTrip } from "@/lib/profile";
+import type { ItineraryItem, Persona, StayOption } from "@/lib/schema";
 
 export default function TripPage() {
   return (
@@ -83,6 +85,7 @@ function TripLoader() {
 function TripCanvas({ uid, persona, saved }: { uid: string; persona: Persona; saved: SavedTrip }) {
   const tripId = saved.trip.trip_id;
   const [items, setItems] = useState<ItineraryItem[]>(saved.trip.items);
+  const [stays, setStays] = useState<StayOption[]>(saved.trip.stay_options);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(true);
 
@@ -98,8 +101,30 @@ function TripCanvas({ uid, persona, saved }: { uid: string; persona: Persona; sa
     [uid, tripId],
   );
 
-  const trip = { ...saved.trip, items };
-  const { isReady, isRunning, lines, send, error } = useTripAgent({ persona, vibe: saved.vibe, trip, onItems });
+  const onStays = useCallback(
+    (next: StayOption[]) => {
+      setStays(next);
+      saveStays(uid, tripId, next).catch((e) => {
+        console.error("Could not save stays", e);
+        setSaveError("Your stays are shown but were not saved. Check your connection, then ask Ije again.");
+      });
+    },
+    [uid, tripId],
+  );
+
+  const trip = { ...saved.trip, items, stay_options: stays };
+  const { isReady, isRunning, lines, send, error, weather } = useTripAgent({
+    persona,
+    vibe: saved.vibe,
+    trip,
+    onItems,
+    onStays,
+  });
+  const places = usePlaces([
+    ...items.map((i) => i.place_id),
+    ...stays.flatMap((s) => (s.place_id ? [s.place_id] : [])),
+  ]);
+  const opens = forecastOpens(saved.trip.start_date);
 
   // First visit: nothing planned yet, so start planning once the agent is ready.
   const started = useRef(false);
@@ -125,6 +150,7 @@ function TripCanvas({ uid, persona, saved }: { uid: string; persona: Persona; sa
                 {t.travellers === 1 ? "traveller" : "travellers"} ·{" "}
                 {formatMoney(t.budget_total.amount_minor, t.budget_total.currency)} in total
               </p>
+              {opens && <p className="ije-caption">Forecast available from {formatDay(opens)}.</p>}
             </div>
             <button
               type="button"
@@ -156,7 +182,7 @@ function TripCanvas({ uid, persona, saved }: { uid: string; persona: Persona; sa
           )}
 
           {items.length > 0 ? (
-            <Itinerary items={items} />
+            <Itinerary items={items} places={places} weather={weather?.days ?? []} />
           ) : isRunning || !isReady ? (
             <section className="ije-card ije-planning" role="status" aria-live="polite">
               <h2 className="ije-card__title">Planning your days</h2>
@@ -165,6 +191,12 @@ function TripCanvas({ uid, persona, saved }: { uid: string; persona: Persona; sa
           ) : askedQuestion ? (
             <p className="ije-notice">Ije has a question before planning. Answer it in the chat.</p>
           ) : null}
+
+          <Stays stays={stays} places={places} />
+
+          {(items.length > 0 || stays.length > 0) && (
+            <p className="ije-caption">Places and weather from Google Maps</p>
+          )}
         </main>
 
         <div hidden={!chatOpen}>

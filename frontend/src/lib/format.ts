@@ -22,3 +22,16 @@ export function formatDay(day: string): string {
 export function formatMoney(amountMinor: number, currency: string): string {
   return new Intl.NumberFormat("en-GB", { style: "currency", currency, maximumFractionDigits: 0 }).format(amountMinor / 100);
 }
+
+/** The Weather API forecasts 10 days ahead (today plus 9). */
+const FORECAST_WINDOW_DAYS = 10;
+
+/** The day a trip's first day enters the forecast window, or null if it already has. */
+export function forecastOpens(startDate: string, today: Date = new Date()): string | null {
+  const start = parse(startDate);
+  if (Number.isNaN(start.getTime())) return null;
+  const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  const firstUncovered = todayUtc + FORECAST_WINDOW_DAYS * 86_400_000;
+  if (start.getTime() < firstUncovered) return null;
+  return new Date(start.getTime() - (FORECAST_WINDOW_DAYS - 1) * 86_400_000).toISOString().slice(0, 10);
+}

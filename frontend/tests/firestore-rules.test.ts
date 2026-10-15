@@ -20,6 +20,7 @@ import {
   NO_PARTY_NEEDS,
   partyNeedsClear,
   personaWrite,
+  staysWrite,
   tripWrite,
 } from "../src/lib/profile";
 import type { ItineraryItem, Persona, Trip, Vibe } from "../src/lib/schema";
@@ -247,6 +248,16 @@ describe("trips as the app writes them", () => {
   test("saving an itinerary is allowed", async () => {
     await seed("users/alice/trips/t1", { ...FULL_TRIP, vibe: VIBE });
     await assertSucceeds(setDoc(doc(as("alice"), "users/alice/trips/t1"), itineraryWrite(ITEMS), { merge: true }));
+  });
+
+  test("saving stays stores place IDs and links, never names", async () => {
+    await seed("users/alice/trips/t1", { ...FULL_TRIP, vibe: VIBE });
+    const stays = staysWrite([
+      { kind: "hotel", name: "A Real Hotel Name", place_id: "ChIJabc1234567", deep_link: "https://www.google.com/maps/search/?api=1&query=place&query_place_id=ChIJabc1234567", reason: "Quiet and central." },
+    ]);
+    await assertSucceeds(setDoc(doc(as("alice"), "users/alice/trips/t1"), stays, { merge: true }));
+    const saved = (await getDoc(doc(as("alice"), "users/alice/trips/t1"))).data();
+    if (saved?.stay_options[0].name !== "") throw new Error("a hotel name was stored");
   });
 
   test("another user cannot save an itinerary onto your trip", async () => {
