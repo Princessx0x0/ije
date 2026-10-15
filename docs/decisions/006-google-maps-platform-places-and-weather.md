@@ -61,3 +61,16 @@ named source, and a weather forecast for the trip's dates.
   `docs/privacy-governance.md` records this.
 - Every new data source needs an ADR like this one.
 - Usage needs a budget alert before launch.
+
+## Addendum: a dedicated service account for Maps calls (2026-10-15)
+
+- On the live agent, Places returned `401 UNAUTHENTICATED` for the agent's own
+  Agent Identity token, while Vertex AI and Firebase Auth accept it. Maps
+  Platform does not accept Agent Identity principals.
+- The agent now calls Places and Weather as `ije-maps@ije-travel-511008.iam.gserviceaccount.com`:
+  - The account has only `roles/serviceusage.serviceUsageConsumer` and no keys.
+  - Only the agent's identity holds `roles/iam.serviceAccountTokenCreator` on it,
+    so only the agent can borrow it, through short-lived impersonated tokens.
+- The deploy sets `IJE_MAPS_SERVICE_ACCOUNT`. Locally it is unset, and your own
+  ADC login is used.
+- Still no API keys anywhere (ADR 002).

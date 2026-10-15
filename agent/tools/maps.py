@@ -1,7 +1,10 @@
 """Google Maps Platform calls (ADR 006): Places API (New) and Weather API.
 
-Authenticated with the runtime identity's OAuth token (Agent Identity on Agent
-Runtime, ADC locally), billed to GOOGLE_CLOUD_PROJECT. No API keys.
+Authenticated with OAuth, never API keys, and billed to GOOGLE_CLOUD_PROJECT.
+On Agent Runtime the agent's own Agent Identity is not accepted by Maps
+Platform (401), so calls go out as the dedicated ije-maps service account,
+which the agent impersonates (IJE_MAPS_SERVICE_ACCOUNT; ADR 006 addendum).
+Locally that variable is unset and ADC (your own login) is used.
 """
 
 from __future__ import annotations
@@ -12,6 +15,7 @@ from functools import lru_cache
 from typing import Any
 
 import google.auth
+from google.auth import impersonated_credentials
 from google.auth.transport.requests import AuthorizedSession
 
 TIMEOUT_S = 15
@@ -43,9 +47,18 @@ class MapsError(Exception):
     """A Maps Platform call failed. The message is safe to show the model."""
 
 
+SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
+
+
 @lru_cache(maxsize=1)
 def _session() -> AuthorizedSession:
-    credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+    credentials, _ = google.auth.default(scopes=SCOPES)
+    maps_sa = os.getenv("IJE_MAPS_SERVICE_ACCOUNT")
+    if maps_sa:
+        # Short-lived tokens for ije-maps, minted with the agent's identity; no keys.
+        credentials = impersonated_credentials.Credentials(
+            source_credentials=credentials, target_principal=maps_sa, target_scopes=SCOPES, lifetime=3600
+        )
     return AuthorizedSession(credentials)
 
 
