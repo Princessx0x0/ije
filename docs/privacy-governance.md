@@ -16,7 +16,9 @@ needed" is closed.
 | Persona: interests, preferred currency | Onboarding | No | Firestore `users/{uid}`, copied into agent session state |
 | Persona: diet, allergies, access needs | Onboarding | **Yes, likely health data** (UK GDPR Art. 9) | Firestore `users/{uid}`, copied into agent session state |
 | Trip: destination, dates, budget, travellers, group type | Trip form, agent | No | Firestore `users/{uid}/trips`, agent session state |
-| Party needs: diet, allergies, access needs of the group | Trip form | **Yes, and about other people** | Firestore trip, agent session state |
+| Party needs: diet, allergies, access needs of the group | Trip form (`/trips/new`), only after health consent | **Yes, and about other people** | Firestore trip, agent session state, sent to Gemini in every planning run |
+| Vibe: pace, local or well known, style | Trip form | No | Firestore trip, agent session state |
+| Itinerary items | Agent | No | Firestore trip, agent session state |
 | Chat messages with the agent | Chat panel | Can contain anything the user types | Agent Platform Sessions |
 
 Note: `halal` and `kosher` can reveal religious belief, which is also special
@@ -52,6 +54,9 @@ is transferred to and stored in the US.
    - Withdrawing (unticking, then saving) writes the health fields empty.
    - `firestore.rules` refuses health fields, and trip `party_needs`, unless
      consent to the current wording version is on record.
+   - Withdrawal also clears `party_needs` on every trip, in the same batch.
+   - Persona and party needs are sent to Gemini (Vertex AI) as session state
+     on every planning run; without consent they are sent empty.
    - Gaps: when the wording version is bumped, old health data stays in
      Firestore until the user next saves preferences (decide whether to purge
      it). Once the agent session receives the persona, withdrawal must also

@@ -35,11 +35,14 @@ ADRs live in `docs/decisions/`. Read the relevant one before touching identity, 
 
 ## Current state and next work
 
-- Routing after sign-in or Continue as guest: `app/page.tsx` reads `users/{uid}.persona` from Firestore (`lib/profile.ts`) and sends new users to `/onboarding`, returning users to `/trips`. `/trips` also bounces to onboarding if there is no persona. Guests and full accounts take the same path.
+- Flow: sign-in or Continue as guest, then `/` (`app/page.tsx`) routes by `users/{uid}.persona`: none goes to `/onboarding`, otherwise `/trips`. A new user's first onboarding save goes straight to `/trips/new`; `/trips` with no trips redirects there too, so nobody lands on an empty list. Guests and full accounts take the same path.
+- `/trips/new`: trip details then vibe sliders; creates `users/{uid}/trips/{tripId}` and opens `/trips/{tripId}`.
+- `/trips/{tripId}`: the itinerary canvas. `components/trip/useTripAgent.ts` binds a thread-scoped agent (thread id = trip id), sets `{ persona, vibe, trip }` as agent state before each run, and always runs through `copilotkit.runAgent` (never `agent.runAgent`, which would skip the Firebase token). New `trip.items` from the agent are saved to Firestore; reloads read Firestore. First visit with no items plans automatically. Chat is a hideable side panel (`components/trip/ChatPanel.tsx`).
 - Guests are never pushed to sign out or sign up. The upgrade prompt is optional and lives only in `components/auth/AccountMenu.tsx`; `/sign-in` offers guests "Not now".
-- Firestore layout: `users/{uid}` holds `{ persona, consents, updatedAt }`, trips go in `users/{uid}/trips/{tripId}`. Rules are in `firestore.rules`, deployed with `firebase deploy --only firestore:rules` (`firebase.json`). TS mirrors of `agent/schema.py` are in `lib/schema.ts`.
-- Health fields (diet, allergies, access needs, trip `party_needs`) need explicit consent: `savePersona` empties them without it, and the rules refuse them unless `consents.health` matches `HEALTH_CONSENT_VERSION`. Change the version in `lib/profile.ts` and `firestore.rules` together.
-- Then: trip details, vibe sliders, itinerary canvas, PDF export, preferences, delete account (order in `docs/backend-contract.md`). The privacy policy page waits for the governance phase: see `docs/privacy-governance.md`, and keep it current as features change what data is collected or where it goes.
+- Firestore layout: `users/{uid}` holds `{ persona, consents, updatedAt }`; trips are `users/{uid}/trips/{tripId}` holding `{ ...Trip, vibe, createdAt, updatedAt }` (`vibe` is per trip and sent to the agent separately). Rules are in `firestore.rules`, deployed with `firebase deploy --only firestore:rules` (`firebase.json`). TS mirrors of `agent/schema.py` are in `lib/schema.ts`.
+- Health fields (diet, allergies, access needs, trip `party_needs`) need explicit consent: `savePersona` empties them without it and clears `party_needs` on every trip in the same batch, and the rules refuse them unless `consents.health` matches `HEALTH_CONSENT_VERSION`. Change the version in `lib/profile.ts` and `firestore.rules` together.
+- Known limits: the agent has no place names or places search yet (`place_id: "unverified"`, model-chosen `source_url`), so cards lead with the reason. Chat history is not restored after a reload; the itinerary is.
+- Then: PDF export, stays, delete account (order in `docs/backend-contract.md`). The privacy policy page waits for the governance phase: see `docs/privacy-governance.md`, and keep it current as features change what data is collected or where it goes.
 
 ## Commands (run in `frontend/`)
 
