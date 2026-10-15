@@ -70,3 +70,6 @@ deployment_metadata.json
 # Python bytecode
 __pycache__/
 *.pyc
+
+# agents-cli eval outputs (traces and grades)
+artifacts/

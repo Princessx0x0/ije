@@ -1,13 +1,13 @@
+# Ije eval metrics. Both run locally (no managed eval service region needed).
+# Bar before any deploy: plan_rules 1 on every case, ije_judge >= 4 on every case.
 metrics_to_run:
-  - custom_response_quality
+  - plan_rules
+  - ije_judge
 
 custom_metrics:
-  # Default: local LLM-as-judge (see response_quality.py). Runs in-process via
-  # google-genai on Gemini platform (ADC) or Google AI Studio (GEMINI_API_KEY).
-  - name: custom_response_quality
-    custom_function_file: response_quality.py
-  - name: agent_turn_count
-    custom_function: |
-      def evaluate(instance):
-          turns = (instance.get("agent_data") or {}).get("turns", [])
-          return {'score': len(turns)}
+  # Deterministic: what the agent did (tool calls), cannot be talked round.
+  - name: plan_rules
+    custom_function_file: plan_rules.py
+  # LLM-as-judge against each case's expected behaviour (the case `reference`).
+  - name: ije_judge
+    custom_function_file: ije_judge.py

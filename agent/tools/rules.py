@@ -6,6 +6,7 @@ links are built from place IDs and reasons must not repeat place names.
 
 from __future__ import annotations
 
+import ast
 from datetime import date, timedelta
 from urllib.parse import quote, urlencode
 
@@ -80,3 +81,72 @@ def condition_for(weather_type: str | None) -> str:
         if t in _CONDITIONS[condition]:
             return condition
     return "mixed"
+
+
+# Access needs that mean a step-free, wheelchair-usable route matters.
+STEP_FREE_NEEDS = {"wheelchair", "step-free", "limited-walking"}
+
+
+def combined_needs(persona: dict | None, party_needs: dict | None) -> dict[str, list[str]]:
+    """The traveller's and the group's needs together, de-duplicated, in order."""
+    out: dict[str, list[str]] = {}
+    for key in ("dietary", "allergies", "accessibility"):
+        seen: list[str] = []
+        for source in (persona or {}, party_needs or {}):
+            for value in source.get(key) or []:
+                if value and value not in seen:
+                    seen.append(value)
+        out[key] = seen
+    return out
+
+
+def needs_query(kind: str, needs: dict[str, list[str]]) -> str:
+    """Words appended to every search so needs are applied, not just remembered."""
+    words = []
+    if kind == "food":
+        words += needs.get("dietary") or []
+        words += [f"{a}-free" for a in needs.get("allergies") or []]
+    if STEP_FREE_NEEDS & set(needs.get("accessibility") or []):
+        words.append("wheelchair accessible")
+    return " ".join(words)
+
+
+# Place types that are a clear clash with an allergy, whatever the search said.
+ALLERGY_RISK_TYPES = {
+    "shellfish": {"seafood_restaurant", "sushi_restaurant", "oyster_bar_restaurant"},
+    "fish": {"seafood_restaurant", "sushi_restaurant", "fish_and_chips_restaurant", "oyster_bar_restaurant"},
+}
+
+
+def allergy_clash(types: list[str] | None, allergies: list[str]) -> str | None:
+    """The allergy a place's Google types clash with, if any."""
+    for allergy in allergies:
+        risky = ALLERGY_RISK_TYPES.get(allergy.strip().lower())
+        if risky and risky & set(types or []):
+            return allergy
+    return None
+
+
+def call_from_code(code: str, allowed: set[str]) -> tuple[str, dict] | None:
+    """Recover a tool call the model wrote as Python, e.g.
+    `print(default_api.update_itinerary(items=[...]))`.
+
+    Parses only; never executes. Arguments must be plain literals.
+    """
+    try:
+        node = ast.parse(code.strip(), mode="eval").body
+    except SyntaxError:
+        return None
+    if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "print" and len(node.args) == 1:
+        node = node.args[0]
+    if not isinstance(node, ast.Call) or node.args:
+        return None
+    func = node.func
+    name = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", None)
+    if name not in allowed:
+        return None
+    try:
+        args = {kw.arg: ast.literal_eval(kw.value) for kw in node.keywords if kw.arg}
+    except (ValueError, SyntaxError):
+        return None
+    return name, args

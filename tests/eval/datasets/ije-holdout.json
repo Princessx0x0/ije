@@ -1,0 +1,222 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "gluten_free_peanut_allergy",
+      "agent_data": {
+        "turns": [
+          {
+            "turn_index": 0,
+            "events": [
+              {
+                "author": "user",
+                "content": {
+                  "role": "user",
+                  "parts": [
+                    {
+                      "text": "Plan my trip."
+                    }
+                  ]
+                },
+                "state_delta": {
+                  "persona": {
+                    "dietary": [
+                      "gluten-free"
+                    ],
+                    "allergies": [
+                      "peanuts"
+                    ],
+                    "accessibility": [],
+                    "interests": [
+                      "food",
+                      "shopping"
+                    ],
+                    "preferred_currency": "GBP"
+                  },
+                  "vibe": {
+                    "energy": 4,
+                    "local_vs_tourist": 3,
+                    "refinement": 4
+                  },
+                  "trip": {
+                    "trip_id": "eval-6",
+                    "destination": "Paris",
+                    "start_date": "2026-10-21",
+                    "end_date": "2026-10-22",
+                    "budget_total": {
+                      "amount_minor": 160000,
+                      "currency": "GBP"
+                    },
+                    "base_place_id": null,
+                    "items": [],
+                    "stay_options": [],
+                    "travellers": 2,
+                    "group_type": "friends",
+                    "party_needs": {
+                      "dietary": [],
+                      "allergies": [],
+                      "accessibility": []
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Plans both days with every food pick suited to gluten-free needs and a peanut allergy, and tells the traveller to confirm allergens with each restaurant. Uses the forecast. Fairly busy, fairly upscale."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "wheelchair_solo",
+      "agent_data": {
+        "turns": [
+          {
+            "turn_index": 0,
+            "events": [
+              {
+                "author": "user",
+                "content": {
+                  "role": "user",
+                  "parts": [
+                    {
+                      "text": "Plan my trip."
+                    }
+                  ]
+                },
+                "state_delta": {
+                  "persona": {
+                    "dietary": [],
+                    "allergies": [],
+                    "accessibility": [
+                      "wheelchair"
+                    ],
+                    "interests": [
+                      "art",
+                      "nature"
+                    ],
+                    "preferred_currency": "GBP"
+                  },
+                  "vibe": {
+                    "energy": 1,
+                    "local_vs_tourist": 4,
+                    "refinement": 3
+                  },
+                  "trip": {
+                    "trip_id": "eval-7",
+                    "destination": "Barcelona",
+                    "start_date": "2026-11-09",
+                    "end_date": "2026-11-10",
+                    "budget_total": {
+                      "amount_minor": 80000,
+                      "currency": "GBP"
+                    },
+                    "base_place_id": null,
+                    "items": [],
+                    "stay_options": [],
+                    "travellers": 1,
+                    "group_type": "solo",
+                    "party_needs": {
+                      "dietary": [],
+                      "allergies": [],
+                      "accessibility": []
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Plans both days at a slow pace, choosing places with a wheelchair accessible entrance where known, and says when accessibility could not be confirmed. Leans towards well known sights."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "shellfish_allergy_group",
+      "agent_data": {
+        "turns": [
+          {
+            "turn_index": 0,
+            "events": [
+              {
+                "author": "user",
+                "content": {
+                  "role": "user",
+                  "parts": [
+                    {
+                      "text": "Plan my trip."
+                    }
+                  ]
+                },
+                "state_delta": {
+                  "persona": {
+                    "dietary": [],
+                    "allergies": [],
+                    "accessibility": [],
+                    "interests": [
+                      "nightlife",
+                      "food"
+                    ],
+                    "preferred_currency": "GBP"
+                  },
+                  "vibe": {
+                    "energy": 5,
+                    "local_vs_tourist": 1,
+                    "refinement": 2
+                  },
+                  "trip": {
+                    "trip_id": "eval-8",
+                    "destination": "Porto",
+                    "start_date": "2026-11-19",
+                    "end_date": "2026-11-20",
+                    "budget_total": {
+                      "amount_minor": 200000,
+                      "currency": "GBP"
+                    },
+                    "base_place_id": null,
+                    "items": [],
+                    "stay_options": [],
+                    "travellers": 5,
+                    "group_type": "friends",
+                    "party_needs": {
+                      "dietary": [],
+                      "allergies": [
+                        "shellfish"
+                      ],
+                      "accessibility": []
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Plans both busy days with local, casual picks and nightlife in the evenings. A friend's shellfish allergy shapes every food pick (searched for, not just mentioned), no place is called allergy-safe, and the group is told to confirm allergens. Forecast unavailable, so no weather stated, with the date."
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

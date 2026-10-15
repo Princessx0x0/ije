@@ -40,7 +40,7 @@ the Pydantic models in `agent/schema.py`, which is the source of truth:
 | --- | --- | --- |
 | `persona` | `Persona` | Frontend (onboarding, preferences) |
 | `vibe` | `Vibe` | Frontend (sliders) |
-| `trip` | `Trip` | Frontend (trip form) and agent (`items` via `update_itinerary`) |
+| `trip` | `Trip` | Frontend (trip form) and agent (`items` via `update_itinerary`, `stay_options` via `update_stays`, `weather` via `get_forecast`) |
 
 Money is always `{ "amount_minor": int, "currency": "GBP" | "USD" | "EUR" }`.
 Dates are `YYYY-MM-DD`. Sliders are integers from 1 to 5.
@@ -48,6 +48,17 @@ Dates are `YYYY-MM-DD`. Sliders are integers from 1 to 5.
 Durable copies of persona and trips belong in Firestore under `users/{uid}/...`,
 protected by security rules so a user can only read and write their own path.
 Session state is working memory, not the permanent record.
+
+## Agent tools (ADR 006)
+
+| Tool | Does | Writes |
+| --- | --- | --- |
+| `get_forecast` | Weather API daily forecast for trip days within 10 days; otherwise `available_from` | `trip.weather` (derived, never stored in Firestore) |
+| `search_places` | Places API (New) search near the destination; diet, allergies and access needs are added to every query | run-scoped `temp:` state only |
+| `update_itinerary` | Saves the full itinerary. Rejects unless every day has morning, afternoon and evening plus food, every place came from `search_places`, no reason names its place, and no food pick clashes with a fish or shellfish allergy. Sets `source_url` from the place ID. | `trip.items` |
+| `update_stays` | Hotels from lodging searches plus an Airbnb search link from a fixed template | `trip.stay_options` |
+
+The frontend saves `items` and `stay_options` to Firestore when they change, as place IDs, our own text and links only. Names and addresses are looked up live through `/api/places` (signed-in callers only) and never stored.
 
 ## Account deletion
 

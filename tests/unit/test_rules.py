@@ -63,3 +63,38 @@ def test_condition_mapping():
     assert rules.condition_for("RAIN_AND_SNOW") == "snowy"
     assert rules.condition_for("SCATTERED_THUNDERSTORMS") == "rainy"
     assert rules.condition_for(None) == "mixed"
+
+
+def test_needs_combine_persona_and_group_without_duplicates():
+    needs = rules.combined_needs(
+        {"dietary": ["halal"], "allergies": ["peanuts"], "accessibility": []},
+        {"dietary": ["halal", "vegan"], "allergies": [], "accessibility": ["step-free"]},
+    )
+    assert needs == {"dietary": ["halal", "vegan"], "allergies": ["peanuts"], "accessibility": ["step-free"]}
+
+
+def test_needs_query_applies_diet_and_allergies_to_food_and_access_to_everything():
+    needs = {"dietary": ["gluten-free"], "allergies": ["peanuts"], "accessibility": ["wheelchair"]}
+    assert rules.needs_query("food", needs) == "gluten-free peanuts-free wheelchair accessible"
+    assert rules.needs_query("sight", needs) == "wheelchair accessible"
+    assert rules.needs_query("sight", {"dietary": [], "allergies": [], "accessibility": ["hearing"]}) == ""
+
+
+TOOLS = {"get_forecast", "search_places", "update_itinerary", "update_stays"}
+
+
+def test_code_style_call_is_recovered_without_running_it():
+    code = 'print(default_api.update_itinerary(items=[\n  # Day 1\n  {"item_id": "a", "slot": "morning"},\n]))'
+    assert rules.call_from_code(code, TOOLS) == ("update_itinerary", {"items": [{"item_id": "a", "slot": "morning"}]})
+
+
+def test_code_that_is_not_a_plain_literal_tool_call_is_refused():
+    assert rules.call_from_code("import os; os.system('x')", TOOLS) is None
+    assert rules.call_from_code("print(default_api.delete_everything())", TOOLS) is None
+    assert rules.call_from_code("default_api.update_itinerary(items=open('x').read())", TOOLS) is None
+
+
+def test_seafood_places_clash_with_fish_and_shellfish_allergies():
+    assert rules.allergy_clash(["seafood_restaurant", "restaurant"], ["shellfish"]) == "shellfish"
+    assert rules.allergy_clash(["portuguese_restaurant"], ["shellfish"]) is None
+    assert rules.allergy_clash(["seafood_restaurant"], ["peanuts"]) is None

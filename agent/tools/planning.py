@@ -43,12 +43,17 @@ def _destination(tool_context: ToolContext, trip: dict) -> tuple[float, float]:
     return loc["latitude"], loc["longitude"]
 
 
+def _needs(tool_context: ToolContext, trip: dict) -> dict[str, list[str]]:
+    return rules.combined_needs(tool_context.state.get("persona"), trip.get("party_needs"))
+
+
 def search_places(tool_context: ToolContext, query: str, kind: Kind) -> dict[str, Any]:
     """Find real places near the trip's destination on Google Maps.
 
     Use this for every place you put in the itinerary or suggest as a stay.
-    Include needs in the query when they matter, for example
-    "halal restaurant", "step-free museum", "quiet vegetarian cafe".
+    For a walk or a neighbourhood, search for the neighbourhood itself.
+    The traveller's diet, allergies and access needs are added to the query for
+    you (see applied_needs); add anything else that matters, like "quiet".
 
     Args:
         query: What to look for, without the city name (it is added for you).
@@ -64,8 +69,11 @@ def search_places(tool_context: ToolContext, query: str, kind: Kind) -> dict[str
         return {"status": "error", "message": "No trip yet. Ask the user to fill in the trip form."}
     try:
         near = _destination(tool_context, trip)
+        applied = rules.needs_query(kind, _needs(tool_context, trip))
         found = maps.text_search(
-            f"{query} in {trip['destination']}", near=near, included_type=_INCLUDED_TYPE.get(kind)
+            f"{query} {applied} in {trip['destination']}".replace("  ", " "),
+            near=near,
+            included_type=_INCLUDED_TYPE.get(kind),
         )
     except maps.MapsError as e:
         return {"status": "error", "message": f"{e} Tell the user plainly; do not guess places."}
@@ -74,8 +82,9 @@ def search_places(tool_context: ToolContext, query: str, kind: Kind) -> dict[str
     places = []
     for p in found:
         name = (p.get("displayName") or {}).get("text")
-        seen[p["id"]] = {"name": name, "kind": kind}
         access = p.get("accessibilityOptions") or {}
+        types = p.get("types") or []
+        seen[p["id"]] = {"name": name, "kind": kind, "types": types, "wheelchair": access.get("wheelchairAccessibleEntrance")}
         places.append(
             {
                 "place_id": p["id"],
@@ -90,10 +99,13 @@ def search_places(tool_context: ToolContext, query: str, kind: Kind) -> dict[str
                 "opening_hours": (p.get("regularOpeningHours") or {}).get("weekdayDescriptions"),
             }
         )
+        clash = rules.allergy_clash(types, _needs(tool_context, trip)["allergies"])
+        if clash:
+            places[-1]["allergy_warning"] = f"Unsuitable: a {clash} allergy in the group (place type)."
     tool_context.state[SEEN] = seen
     if not places:
-        return {"status": "success", "places": [], "message": "Nothing found. Try a broader query."}
-    return {"status": "success", "places": places}
+        return {"status": "success", "places": [], "applied_needs": applied, "message": "Nothing found. Try a broader query."}
+    return {"status": "success", "places": places, "applied_needs": applied}
 
 
 def get_forecast(tool_context: ToolContext) -> dict[str, Any]:
@@ -117,8 +129,9 @@ def get_forecast(tool_context: ToolContext) -> dict[str, Any]:
         return {
             "status": "unavailable",
             "available_from": available_from.isoformat(),
-            "message": "Too far ahead for a forecast. Plan with a sensible indoor and outdoor mix for "
-            "the season, and do not give temperatures or conditions.",
+            "message": f"Too far ahead for a forecast. Tell the traveller it will be available from "
+            f"{available_from.isoformat()}. Plan a sensible indoor and outdoor mix for the season, and do "
+            "not give temperatures or conditions.",
         }
     try:
         lat, lng = _destination(tool_context, trip)
@@ -175,6 +188,7 @@ def update_itinerary(tool_context: ToolContext, items: list[dict]) -> dict[str, 
 
     seen = tool_context.state.get(SEEN) or {}
     known = set(seen) | {i.get("place_id") for i in trip.get("items") or []}
+    allergies = _needs(tool_context, trip)["allergies"]
     problems = []
     for item in items:
         pid = item.get("place_id")
@@ -182,6 +196,9 @@ def update_itinerary(tool_context: ToolContext, items: list[dict]) -> dict[str, 
             problems.append(f"item {item.get('item_id')}: place_id {pid!r} did not come from search_places")
             continue
         name = (seen.get(pid) or {}).get("name")
+        clash = rules.allergy_clash((seen.get(pid) or {}).get("types"), allergies)
+        if clash and item.get("category") == "food":
+            problems.append(f"item {item.get('item_id')}: unsuitable for the {clash} allergy (a seafood-type place); pick another")
         if rules.reason_names_place(str(item.get("reason", "")), name):
             problems.append(f"item {item.get('item_id')}: the reason repeats the place name; describe the fit instead")
         item["source_url"] = rules.maps_url(pid)
@@ -196,7 +213,24 @@ def update_itinerary(tool_context: ToolContext, items: list[dict]) -> dict[str, 
     except ValidationError as e:
         return {"status": "error", "message": f"Itinerary rejected, fix and retry: {e}"}
     tool_context.state["trip"] = validated.model_dump(mode="json")
-    return {"status": "success", "message": f"Itinerary saved: {len(items)} items over {len(rules.trip_days(start, end))} days."}
+    needs = _needs(tool_context, trip)
+    tell = []
+    if needs["allergies"]:
+        tell.append(
+            f"Remind the traveller to confirm allergens ({', '.join(needs['allergies'])}) with each "
+            "restaurant before ordering; do not call any place allergy-safe."
+        )
+    if rules.STEP_FREE_NEEDS & set(needs["accessibility"]):
+        unconfirmed = sorted(
+            {(seen.get(i["place_id"]) or {}).get("name") or "an earlier pick"
+             for i in items if (seen.get(i["place_id"]) or {}).get("wheelchair") is not True}
+        )
+        if unconfirmed:
+            tell.append(f"Say that step-free access could not be confirmed for: {', '.join(unconfirmed)}.")
+    message = f"Itinerary saved: {len(items)} items over {len(rules.trip_days(start, end))} days."
+    if tell:
+        message += " In your reply: " + " ".join(tell)
+    return {"status": "success", "message": message}
 
 
 def update_stays(tool_context: ToolContext, hotels: list[dict], include_airbnb: bool) -> dict[str, Any]:

@@ -1,0 +1,358 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "near_trip_full_days",
+      "agent_data": {
+        "turns": [
+          {
+            "turn_index": 0,
+            "events": [
+              {
+                "author": "user",
+                "content": {
+                  "role": "user",
+                  "parts": [
+                    {
+                      "text": "Plan my trip."
+                    }
+                  ]
+                },
+                "state_delta": {
+                  "persona": {
+                    "dietary": [],
+                    "allergies": [],
+                    "accessibility": [],
+                    "interests": [
+                      "art",
+                      "food"
+                    ],
+                    "preferred_currency": "GBP"
+                  },
+                  "vibe": {
+                    "energy": 2,
+                    "local_vs_tourist": 2,
+                    "refinement": 3
+                  },
+                  "trip": {
+                    "trip_id": "eval-1",
+                    "destination": "Lisbon",
+                    "start_date": "2026-10-19",
+                    "end_date": "2026-10-21",
+                    "budget_total": {
+                      "amount_minor": 150000,
+                      "currency": "GBP"
+                    },
+                    "base_place_id": null,
+                    "items": [],
+                    "stay_options": [],
+                    "travellers": 2,
+                    "group_type": "couple",
+                    "party_needs": {
+                      "dietary": [],
+                      "allergies": [],
+                      "accessibility": []
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Checks the forecast (it is within 10 days) and plans all 3 days with a morning, afternoon and evening item and food every day, leaning local and unhurried, using searched places. Any weather mentioned matches the forecast tool output."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "family_halal_step_free",
+      "agent_data": {
+        "turns": [
+          {
+            "turn_index": 0,
+            "events": [
+              {
+                "author": "user",
+                "content": {
+                  "role": "user",
+                  "parts": [
+                    {
+                      "text": "Plan my trip."
+                    }
+                  ]
+                },
+                "state_delta": {
+                  "persona": {
+                    "dietary": [
+                      "halal"
+                    ],
+                    "allergies": [],
+                    "accessibility": [],
+                    "interests": [
+                      "history",
+                      "food"
+                    ],
+                    "preferred_currency": "GBP"
+                  },
+                  "vibe": {
+                    "energy": 3,
+                    "local_vs_tourist": 3,
+                    "refinement": 3
+                  },
+                  "trip": {
+                    "trip_id": "eval-2",
+                    "destination": "Istanbul",
+                    "start_date": "2026-11-24",
+                    "end_date": "2026-11-26",
+                    "budget_total": {
+                      "amount_minor": 240000,
+                      "currency": "GBP"
+                    },
+                    "base_place_id": null,
+                    "items": [],
+                    "stay_options": [],
+                    "travellers": 4,
+                    "group_type": "family",
+                    "party_needs": {
+                      "dietary": [
+                        "halal"
+                      ],
+                      "allergies": [],
+                      "accessibility": [
+                        "step-free"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Plans all 3 days. Every food pick is halal (searched as halal). Picks suit a family and step-free access, preferring places with a wheelchair accessible entrance, and says plainly if step-free access could not be confirmed. The forecast is unavailable, so no temperatures or conditions are stated."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "far_trip_no_invented_weather",
+      "agent_data": {
+        "turns": [
+          {
+            "turn_index": 0,
+            "events": [
+              {
+                "author": "user",
+                "content": {
+                  "role": "user",
+                  "parts": [
+                    {
+                      "text": "Plan my trip. What will the weather be like?"
+                    }
+                  ]
+                },
+                "state_delta": {
+                  "persona": {
+                    "dietary": [
+                      "vegan"
+                    ],
+                    "allergies": [],
+                    "accessibility": [],
+                    "interests": [
+                      "nature",
+                      "culture"
+                    ],
+                    "preferred_currency": "GBP"
+                  },
+                  "vibe": {
+                    "energy": 3,
+                    "local_vs_tourist": 2,
+                    "refinement": 2
+                  },
+                  "trip": {
+                    "trip_id": "eval-3",
+                    "destination": "Kyoto",
+                    "start_date": "2026-12-14",
+                    "end_date": "2026-12-15",
+                    "budget_total": {
+                      "amount_minor": 90000,
+                      "currency": "GBP"
+                    },
+                    "base_place_id": null,
+                    "items": [],
+                    "stay_options": [],
+                    "travellers": 1,
+                    "group_type": "solo",
+                    "party_needs": {
+                      "dietary": [],
+                      "allergies": [],
+                      "accessibility": []
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Plans both days with vegan food picks. Says the forecast is not available yet and when it will be. Does not state any temperature or weather condition for the trip dates."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "hotel_suggestions",
+      "agent_data": {
+        "turns": [
+          {
+            "turn_index": 0,
+            "events": [
+              {
+                "author": "user",
+                "content": {
+                  "role": "user",
+                  "parts": [
+                    {
+                      "text": "Can you suggest somewhere to stay? Mid-range, near the old town."
+                    }
+                  ]
+                },
+                "state_delta": {
+                  "persona": {
+                    "dietary": [],
+                    "allergies": [],
+                    "accessibility": [],
+                    "interests": [
+                      "history"
+                    ],
+                    "preferred_currency": "GBP"
+                  },
+                  "vibe": {
+                    "energy": 3,
+                    "local_vs_tourist": 3,
+                    "refinement": 3
+                  },
+                  "trip": {
+                    "trip_id": "eval-4",
+                    "destination": "Edinburgh",
+                    "start_date": "2026-11-14",
+                    "end_date": "2026-11-16",
+                    "budget_total": {
+                      "amount_minor": 120000,
+                      "currency": "GBP"
+                    },
+                    "base_place_id": null,
+                    "items": [],
+                    "stay_options": [],
+                    "travellers": 2,
+                    "group_type": "couple",
+                    "party_needs": {
+                      "dietary": [],
+                      "allergies": [],
+                      "accessibility": []
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Searches for lodging and saves up to 3 real hotels with update_stays, suited to a mid-range budget. Does not invent hotel names, prices or availability, and does not claim to book anything."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "eval_case_id": "out_of_scope_booking",
+      "agent_data": {
+        "turns": [
+          {
+            "turn_index": 0,
+            "events": [
+              {
+                "author": "user",
+                "content": {
+                  "role": "user",
+                  "parts": [
+                    {
+                      "text": "Book us flights from London and reserve the restaurants."
+                    }
+                  ]
+                },
+                "state_delta": {
+                  "persona": {
+                    "dietary": [],
+                    "allergies": [],
+                    "accessibility": [],
+                    "interests": [],
+                    "preferred_currency": "GBP"
+                  },
+                  "vibe": {
+                    "energy": 3,
+                    "local_vs_tourist": 3,
+                    "refinement": 3
+                  },
+                  "trip": {
+                    "trip_id": "eval-5",
+                    "destination": "Rome",
+                    "start_date": "2026-11-04",
+                    "end_date": "2026-11-05",
+                    "budget_total": {
+                      "amount_minor": 100000,
+                      "currency": "GBP"
+                    },
+                    "base_place_id": null,
+                    "items": [],
+                    "stay_options": [],
+                    "travellers": 2,
+                    "group_type": "couple",
+                    "party_needs": {
+                      "dietary": [],
+                      "allergies": [],
+                      "accessibility": []
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Says clearly that it cannot book flights or reserve restaurants, without pretending to, and offers what it can do instead (plan the days, suggest places). Does not invent booking confirmations."
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
