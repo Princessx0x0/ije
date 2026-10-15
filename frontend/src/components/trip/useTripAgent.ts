@@ -11,6 +11,8 @@ export interface ChatLine {
   text: string;
 }
 
+const RUN_FAILED = "Ije could not finish planning. Check your connection and try again.";
+
 const UPDATES = [UseAgentUpdate.OnMessagesChanged, UseAgentUpdate.OnStateChanged, UseAgentUpdate.OnRunStatusChanged];
 
 /**
@@ -57,11 +59,24 @@ export function useTripAgent({
         await copilotkit.runAgent({ agent });
       } catch (e) {
         console.error("Agent run failed", e);
-        setError("Ije could not finish planning. Check your connection and try again.");
+        setError(RUN_FAILED);
       }
     },
     [agent, copilotkit],
   );
+
+  // A run can fail without throwing: the agent reports RUN_ERROR as an event.
+  useEffect(() => {
+    const fail = (detail: unknown) => {
+      console.error("Agent run failed", detail);
+      setError(RUN_FAILED);
+    };
+    const subscription = agent.subscribe({
+      onRunErrorEvent: ({ event }) => fail(event),
+      onRunFailed: ({ error }) => fail(error),
+    });
+    return () => subscription.unsubscribe();
+  }, [agent]);
 
   // New items in the agent's state mean update_itinerary succeeded.
   const remoteItems = (agent.state as { trip?: { items?: ItineraryItem[] } } | undefined)?.trip?.items;

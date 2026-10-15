@@ -108,6 +108,8 @@ function PlanTrip({ persona, healthConsent }: { persona: Persona; healthConsent:
   }, [step]);
 
   const fixedTravellers = group ? FIXED_TRAVELLERS[group] : undefined;
+  /** Anyone but a solo traveller: the budget is shared and others may have needs. */
+  const isGroup = group !== null && group !== "solo";
   const travellerCount = fixedTravellers ?? Number(travellers);
 
   function validate(): Errors {
@@ -118,12 +120,13 @@ function PlanTrip({ persona, healthConsent }: { persona: Persona; healthConsent:
     if (!end) e.end = "Choose an end date.";
     else if (start && end < start) e.end = "The end date is before the start date.";
     else if (start && daysBetween(start, end) > MAX_DAYS) e.end = `Ije plans up to ${MAX_DAYS} days at a time.`;
-    const amount = Number(budget);
-    if (!budget.trim() || !Number.isFinite(amount) || amount <= 0) e.budget = "Enter a total budget above zero.";
     if (!group) e.group = "Choose who is going.";
     else if (!fixedTravellers && !(Number.isInteger(travellerCount) && travellerCount >= 1 && travellerCount <= 20)) {
       e.travellers = "Enter a number from 1 to 20.";
     }
+    // The budget field appears once who is going is chosen.
+    const amount = Number(budget);
+    if (group && (!budget.trim() || !Number.isFinite(amount) || amount <= 0)) e.budget = "Enter a total budget above zero.";
     return e;
   }
 
@@ -157,7 +160,8 @@ function PlanTrip({ persona, healthConsent }: { persona: Persona; healthConsent:
           stay_options: [],
           travellers: travellerCount,
           group_type: group,
-          party_needs: healthConsent
+          // A solo traveller's needs come from their persona.
+          party_needs: healthConsent && isGroup
             ? { dietary: needs.dietary, allergies: parseAllergies(needs.allergies), accessibility: needs.accessibility }
             : NO_PARTY_NEEDS,
         },
@@ -242,23 +246,6 @@ function PlanTrip({ persona, healthConsent }: { persona: Persona; healthConsent:
               </div>
             </div>
 
-            <div className="ije-field">
-              <label className="ije-field__label" htmlFor="trip-budget">
-                Total budget for the group
-              </label>
-              <input
-                id="trip-budget"
-                className="ije-field__input"
-                inputMode="decimal"
-                value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-                placeholder="For example 1800"
-                {...invalid("budget")}
-              />
-              {fieldError("budget")}
-            </div>
-            <CurrencyPicker legend="Budget currency" value={currency} onChange={setCurrency} />
-
             <fieldset className="ije-fieldset" {...(errors.group ? { "aria-describedby": "trip-group-error" } : {})}>
               <legend className="ije-field__label">Who is going?</legend>
               <div className="ije-chips">
@@ -298,25 +285,58 @@ function PlanTrip({ persona, healthConsent }: { persona: Persona; healthConsent:
               </div>
             )}
 
-            <section className="ije-card ije-card--inset" aria-labelledby="party-heading">
-              <h2 id="party-heading" className="ije-card__title">
-                Needs for the whole group
-              </h2>
-              {healthConsent ? (
-                <>
-                  <p>Add anything the group needs on this trip, beyond your own preferences.</p>
-                  <NeedsFields idPrefix="party" value={needs} onChange={setNeeds} />
-                </>
-              ) : (
-                <p>
-                  To plan around diet, allergies or access needs, first agree to Ije keeping them in{" "}
-                  <Link href="/onboarding" className="ije-link ije-link--inline">
-                    Travel preferences
-                  </Link>
-                  .
-                </p>
-              )}
-            </section>
+            {group && (
+              <>
+              <div className="ije-field">
+                <label className="ije-field__label" htmlFor="trip-budget">
+                  {isGroup ? "Total budget for the group" : "Total budget"}
+                </label>
+                {isGroup && (
+                  <p id="trip-budget-hint" className="ije-field__hint">
+                    For everyone together, not per person.
+                  </p>
+                )}
+                <input
+                  id="trip-budget"
+                  className="ije-field__input"
+                  inputMode="decimal"
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
+                  placeholder="For example 1800"
+                  aria-invalid={errors.budget ? true : undefined}
+                  aria-describedby={
+                    [isGroup && "trip-budget-hint", errors.budget && "trip-budget-error"].filter(Boolean).join(" ") ||
+                    undefined
+                  }
+                />
+                {fieldError("budget")}
+              </div>
+              <CurrencyPicker legend="Budget currency" value={currency} onChange={setCurrency} />
+
+              </>
+            )}
+
+            {isGroup && (
+              <section className="ije-card ije-card--inset" aria-labelledby="party-heading">
+                <h2 id="party-heading" className="ije-card__title">
+                  Needs for the whole group
+                </h2>
+                {healthConsent ? (
+                  <>
+                    <p>Your own needs from Travel preferences are already included. Add anything the others need.</p>
+                    <NeedsFields idPrefix="party" value={needs} onChange={setNeeds} />
+                  </>
+                ) : (
+                  <p>
+                    To plan around diet, allergies or access needs, first agree to Ije keeping them in{" "}
+                    <Link href="/onboarding" className="ije-link ije-link--inline">
+                      Travel preferences
+                    </Link>
+                    .
+                  </p>
+                )}
+              </section>
+            )}
 
             <button type="submit" className="ije-button ije-button--block">
               Next: the vibe

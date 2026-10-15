@@ -46,7 +46,7 @@ ADRs live in `docs/decisions/`. Read the relevant one before touching identity, 
 
 ## Commands (run in `frontend/`)
 
-- `npm run dev`: UI on :3000 and agent on :8000
+- `npm run dev`: UI on :3000 and agent on :8000. The local agent uses Application Default Credentials for Gemini and for the token revocation check. If runs fail with "Invalid Firebase ID token: RefreshError", the Firebase token is fine: ADC has expired. Run `gcloud auth application-default login`, then restart `npm run dev` (the agent caches credentials at start).
 - `npm run typecheck`
 - `npm run test:rules`: Firestore rules tests on the emulator (needs the Firebase CLI and Java 21 on PATH). Must pass before `firebase deploy --only firestore:rules` (run from the repo root).
 - `npm run build`
