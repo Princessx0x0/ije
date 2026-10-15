@@ -45,30 +45,6 @@
   color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #161b1c;
-    --surface: #1f2627;
-    --inset: #283031;
-    --track: #3a4344;
-    --ink: #eeeae2;
-    --ink-muted: #aeb6b4;
-    --primary: #8cc2b8;
-    --primary-hover: #a6d3ca;
-    --on-primary: #10211e;
-    --primary-soft: #22403b;
-    --on-primary-soft: #cfe6e0;
-    --laterite: #e09a76;
-    --local-soft: #3d2a20;
-    --on-local-soft: #f0c6ae;
-    --danger: #f1a7a0;
-    --danger-soft: #3f2523;
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.32);
-    --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.40);
-    color-scheme: dark;
-  }
-}
-
 :root {
   --space-8: 8px;
   --space-16: 16px;

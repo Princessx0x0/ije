@@ -12,10 +12,17 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { deleteDoc, doc, getDoc, setDoc, type Firestore } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, setDoc, writeBatch, type Firestore } from "firebase/firestore";
 
-import { HEALTH_CONSENT_VERSION, personaWrite } from "../src/lib/profile";
-import type { Persona } from "../src/lib/schema";
+import {
+  HEALTH_CONSENT_VERSION,
+  itineraryWrite,
+  NO_PARTY_NEEDS,
+  partyNeedsClear,
+  personaWrite,
+  tripWrite,
+} from "../src/lib/profile";
+import type { ItineraryItem, Persona, Trip, Vibe } from "../src/lib/schema";
 
 const PERSONA: Persona = {
   interests: ["food", "art"],
@@ -25,6 +32,35 @@ const PERSONA: Persona = {
   preferred_currency: "GBP",
 };
 const NO_HEALTH: Persona = { ...PERSONA, dietary: [], allergies: [], accessibility: [] };
+
+const VIBE: Vibe = { energy: 2, local_vs_tourist: 1, refinement: 3 };
+
+const FULL_TRIP: Trip = {
+  trip_id: "t1",
+  destination: "Lisbon",
+  start_date: "2027-04-01",
+  end_date: "2027-04-04",
+  budget_total: { amount_minor: 180000, currency: "GBP" },
+  base_place_id: null,
+  items: [],
+  stay_options: [],
+  travellers: 2,
+  group_type: "couple",
+  party_needs: NO_PARTY_NEEDS,
+};
+
+const ITEMS: ItineraryItem[] = [
+  {
+    item_id: "i1",
+    place_id: "unverified",
+    day: "2027-04-01",
+    slot: "morning",
+    category: "sight",
+    pick_type: "local",
+    reason: "A quiet morning with the story of Lisbon tiles.",
+    source_url: "https://www.visitlisboa.com/",
+  },
+];
 
 const TRIP = {
   trip_id: "t1",
@@ -188,5 +224,59 @@ describe("users/{uid}/trips: owner only, party needs need consent", () => {
         party_needs: { dietary: [], allergies: [], accessibility: [] },
       }),
     );
+  });
+});
+
+describe("trips as the app writes them", () => {
+  test("a new trip without party needs is allowed without consent", async () => {
+    await assertSucceeds(setDoc(doc(as("alice"), "users/alice/trips/t1"), tripWrite(FULL_TRIP, VIBE)));
+  });
+
+  test("a new trip with party needs is allowed with consent", async () => {
+    await seed("users/alice", { persona: PERSONA, consents: consent(true) });
+    const trip = { ...FULL_TRIP, party_needs: { dietary: ["halal" as const], allergies: [], accessibility: [] } };
+    await assertSucceeds(setDoc(doc(as("alice"), "users/alice/trips/t1"), tripWrite(trip, VIBE)));
+  });
+
+  test("a new trip with party needs is refused without consent", async () => {
+    await seed("users/alice", { persona: NO_HEALTH, consents: consent(false) });
+    const trip = { ...FULL_TRIP, party_needs: { dietary: [], allergies: ["sesame"], accessibility: [] } };
+    await assertFails(setDoc(doc(as("alice"), "users/alice/trips/t1"), tripWrite(trip, VIBE)));
+  });
+
+  test("saving an itinerary is allowed", async () => {
+    await seed("users/alice/trips/t1", { ...FULL_TRIP, vibe: VIBE });
+    await assertSucceeds(setDoc(doc(as("alice"), "users/alice/trips/t1"), itineraryWrite(ITEMS), { merge: true }));
+  });
+
+  test("another user cannot save an itinerary onto your trip", async () => {
+    await seed("users/alice/trips/t1", { ...FULL_TRIP, vibe: VIBE });
+    await assertFails(setDoc(doc(as("bob"), "users/alice/trips/t1"), itineraryWrite(ITEMS), { merge: true }));
+  });
+
+  test("left-over party needs block itinerary saves after withdrawal, which is why withdrawal clears them", async () => {
+    await seed("users/alice", { persona: NO_HEALTH, consents: consent(false) });
+    await seed("users/alice/trips/t1", { ...FULL_TRIP, party_needs: { dietary: ["vegan"], allergies: [], accessibility: [] } });
+    await assertFails(setDoc(doc(as("alice"), "users/alice/trips/t1"), itineraryWrite(ITEMS), { merge: true }));
+    await assertSucceeds(setDoc(doc(as("alice"), "users/alice/trips/t1"), partyNeedsClear(), { merge: true }));
+    await assertSucceeds(setDoc(doc(as("alice"), "users/alice/trips/t1"), itineraryWrite(ITEMS), { merge: true }));
+  });
+
+  test("withdrawing consent clears the profile and every trip in one batch", async () => {
+    await seed("users/alice", { persona: PERSONA, consents: consent(true) });
+    await seed("users/alice/trips/t1", { ...FULL_TRIP, party_needs: { dietary: ["vegan"], allergies: [], accessibility: [] } });
+    await seed("users/alice/trips/t2", { ...FULL_TRIP, trip_id: "t2", party_needs: { dietary: [], allergies: ["nuts"], accessibility: [] } });
+    const db = as("alice");
+    const batch = writeBatch(db);
+    batch.set(doc(db, "users/alice"), personaWrite(PERSONA, false), { merge: true });
+    batch.set(doc(db, "users/alice/trips/t1"), partyNeedsClear(), { merge: true });
+    batch.set(doc(db, "users/alice/trips/t2"), partyNeedsClear(), { merge: true });
+    await assertSucceeds(batch.commit());
+    for (const id of ["t1", "t2"]) {
+      const needs = (await getDoc(doc(db, `users/alice/trips/${id}`))).data()?.party_needs;
+      if (needs.dietary.length || needs.allergies.length || needs.accessibility.length) {
+        throw new Error(`party needs survived withdrawal on ${id}`);
+      }
+    }
   });
 });

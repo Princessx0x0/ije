@@ -38,6 +38,52 @@ export interface Money {
   currency: Currency;
 }
 
+export const GROUP_TYPES = ["solo", "couple", "family", "friends", "business"] as const;
+export type GroupType = (typeof GROUP_TYPES)[number];
+
+/** How this trip should feel. Integers 1 to 5. */
+export interface Vibe {
+  energy: number; // 1 slow, 5 packed
+  local_vs_tourist: number; // 1 local, 5 tourist
+  refinement: number; // 1 casual, 5 upscale
+}
+
+/** Combined needs of everyone on the trip. Special category data: needs consent. */
+export interface PartyNeeds {
+  dietary: Dietary[];
+  allergies: string[];
+  accessibility: Accessibility[];
+}
+
+export const SLOTS = ["morning", "afternoon", "evening"] as const;
+export type Slot = (typeof SLOTS)[number];
+
+export interface ItineraryItem {
+  item_id: string;
+  place_id: string;
+  day: string; // YYYY-MM-DD
+  slot: Slot;
+  category: "sight" | "activity" | "food" | "shopping" | "nightlife";
+  pick_type: "local" | "tourist";
+  reason: string;
+  source_url: string;
+}
+
+/** Trip as the agent reads it (no vibe, no timestamps). Dates are YYYY-MM-DD. */
+export interface Trip {
+  trip_id: string;
+  destination: string;
+  start_date: string;
+  end_date: string;
+  budget_total: Money;
+  base_place_id: string | null;
+  items: ItineraryItem[];
+  stay_options: unknown[];
+  travellers: number;
+  group_type: GroupType;
+  party_needs: PartyNeeds;
+}
+
 /** The fields of Trip the trips list reads. Dates are YYYY-MM-DD. */
 export interface TripSummary {
   trip_id: string;
