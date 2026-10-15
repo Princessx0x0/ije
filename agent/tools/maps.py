@@ -6,6 +6,7 @@ Runtime, ADC locally), billed to GOOGLE_CLOUD_PROJECT. No API keys.
 
 from __future__ import annotations
 
+import logging
 import os
 from functools import lru_cache
 from typing import Any
@@ -14,6 +15,10 @@ import google.auth
 from google.auth.transport.requests import AuthorizedSession
 
 TIMEOUT_S = 15
+
+# Failures are told to the model politely, and logged here with the real cause
+# (never the token), so they can be diagnosed from Cloud Logging.
+log = logging.getLogger("ije.maps")
 
 # Only what the agent needs to choose well. Each field affects the price tier.
 PLACE_FIELDS = ",".join(
@@ -71,8 +76,10 @@ def text_search(
             timeout=TIMEOUT_S,
         )
     except Exception as e:
+        log.warning("Places search did not reach Google: %s: %s", type(e).__name__, e)
         raise MapsError(f"Places search could not be reached ({type(e).__name__}).") from e
     if res.status_code != 200:
+        log.warning("Places search returned %s: %s", res.status_code, res.text[:500])
         raise MapsError(f"Places search failed with status {res.status_code}.")
     return res.json().get("places", [])
 
@@ -86,7 +93,9 @@ def daily_forecast(lat: float, lng: float, days: int) -> list[dict[str, Any]]:
             timeout=TIMEOUT_S,
         )
     except Exception as e:
+        log.warning("Forecast did not reach Google: %s: %s", type(e).__name__, e)
         raise MapsError(f"The forecast could not be reached ({type(e).__name__}).") from e
     if res.status_code != 200:
+        log.warning("Forecast returned %s: %s", res.status_code, res.text[:500])
         raise MapsError(f"The forecast failed with status {res.status_code}.")
     return res.json().get("forecastDays", [])

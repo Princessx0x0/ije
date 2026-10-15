@@ -11,6 +11,7 @@ about who the user is is ever trusted.
 
 from __future__ import annotations
 
+import logging
 import os
 
 import firebase_admin
@@ -25,6 +26,9 @@ from pydantic import BaseModel
 from agent.agent import root_agent
 
 load_dotenv()
+
+# Warnings from the agent (for example ije.maps) go to Cloud Logging with their source.
+logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 
 PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT"]
 # The Firebase project whose ID tokens we accept: the project ID string, which
