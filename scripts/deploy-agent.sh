@@ -9,7 +9,7 @@ ENGINE_ID=2768957581710852096
 
 # The local venv contains symlinks outside the project, which the packager
 # rejects. Agent Runtime builds its own environment from the Dockerfile.
-rm -rf agent/.venv
+rm -rf .venv agent/.venv
 
 agents-cli deploy -d agent_runtime \
   --project "$PROJECT" --region "$REGION" --agent-identity \
@@ -18,6 +18,6 @@ agents-cli deploy -d agent_runtime \
   --no-confirm-project --no-wait
 
 # Restore the local environment for development.
-(cd agent && uv sync)
+uv sync
 echo "Deploy started. Check with:"
 echo "  agents-cli deploy --status -d agent_runtime --project $PROJECT --region $REGION --no-confirm-project"

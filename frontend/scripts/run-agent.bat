@@ -1,9 +1,5 @@
 @echo off
-REM Navigate to the agent directory
-cd /d %~dp0\..\agent
+REM The agent is a package at the repo root (pyproject.toml there).
+cd /d "%~dp0\..\.." || exit /b 1
 
-REM Activate the virtual environment
-call .venv\Scripts\activate.bat
-
-REM Run the agent
-uv run main.py
+uv run python -m agent.main
