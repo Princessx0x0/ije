@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Navigate to the agent directory
-cd "$(dirname "$0")/../../agent" || exit 1
+# The agent is a package at the repo root (pyproject.toml there).
+cd "$(dirname "$0")/../.." || exit 1
 
-# Activate the virtual environment
-source .venv/bin/activate
-
-# Run the agent
-uv run main.py
+uv run python -m agent.main

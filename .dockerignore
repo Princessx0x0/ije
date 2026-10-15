@@ -4,3 +4,5 @@
 frontend
 docs
 .git
+**/.adk
+**/.env.example

@@ -1,0 +1,8 @@
+node_modules
+.next
+# Local env files hold keys; only .env.production (public web config) may enter the image.
+.env
+.env.local
+.env.*.local
+tests
+*.log

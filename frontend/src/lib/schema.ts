@@ -69,6 +69,28 @@ export interface ItineraryItem {
   source_url: string;
 }
 
+export interface DayWeather {
+  day: string; // YYYY-MM-DD
+  condition: "sunny" | "cloudy" | "rainy" | "snowy" | "mixed";
+  temp_c: number;
+}
+
+/** Derived: from the Weather API in the agent's session, never stored (ADR 006). */
+export interface Weather {
+  mode: "forecast" | "seasonal";
+  fetched_at: string;
+  days: DayWeather[];
+}
+
+/** A stay suggestion. Hotels carry a place_id; names are fetched live, never stored. */
+export interface StayOption {
+  kind: "hotel" | "airbnb";
+  name: string;
+  place_id: string | null;
+  deep_link: string;
+  reason: string;
+}
+
 /** Trip as the agent reads it (no vibe, no timestamps). Dates are YYYY-MM-DD. */
 export interface Trip {
   trip_id: string;
@@ -78,7 +100,7 @@ export interface Trip {
   budget_total: Money;
   base_place_id: string | null;
   items: ItineraryItem[];
-  stay_options: unknown[];
+  stay_options: StayOption[];
   travellers: number;
   group_type: GroupType;
   party_needs: PartyNeeds;

@@ -3,7 +3,7 @@
 import { useAgent, useCopilotKit, UseAgentUpdate } from "@copilotkit/react-core/v2";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { ItineraryItem, Persona, Trip, Vibe } from "@/lib/schema";
+import type { ItineraryItem, Persona, StayOption, Trip, Vibe, Weather } from "@/lib/schema";
 
 export interface ChatLine {
   id: string;
@@ -29,12 +29,15 @@ export function useTripAgent({
   vibe,
   trip,
   onItems,
+  onStays,
 }: {
   persona: Persona;
   vibe: Vibe;
   trip: Trip;
   /** Called when a run produces a new itinerary. */
   onItems: (items: ItineraryItem[]) => void;
+  /** Called when a run produces new stay suggestions. */
+  onStays: (stays: StayOption[]) => void;
 }) {
   const { copilotkit } = useCopilotKit();
   const { agent, isReady } = useAgent({
@@ -79,12 +82,22 @@ export function useTripAgent({
   }, [agent]);
 
   // New items in the agent's state mean update_itinerary succeeded.
-  const remoteItems = (agent.state as { trip?: { items?: ItineraryItem[] } } | undefined)?.trip?.items;
-  const remoteKey = remoteItems ? JSON.stringify(remoteItems) : null;
+  const remote = (agent.state as { trip?: Partial<Trip> & { weather?: Weather | null } } | undefined)?.trip;
+  const remoteItems = remote?.items ? JSON.stringify(remote.items) : null;
   useEffect(() => {
-    if (!remoteKey || remoteKey === JSON.stringify(latest.current.trip.items)) return;
-    onItems(JSON.parse(remoteKey) as ItineraryItem[]);
-  }, [remoteKey, onItems]);
+    if (!remoteItems || remoteItems === JSON.stringify(latest.current.trip.items)) return;
+    onItems(JSON.parse(remoteItems) as ItineraryItem[]);
+  }, [remoteItems, onItems]);
+
+  // New stay options mean update_stays succeeded.
+  const remoteStays = remote?.stay_options ? JSON.stringify(remote.stay_options) : null;
+  useEffect(() => {
+    if (!remoteStays || remoteStays === JSON.stringify(latest.current.trip.stay_options)) return;
+    onStays(JSON.parse(remoteStays) as StayOption[]);
+  }, [remoteStays, onStays]);
+
+  /** Forecast from this session's agent run; derived, so never saved. */
+  const weather = remote?.weather ?? null;
 
   const lines: ChatLine[] = agent.messages.flatMap((m) => {
     if ((m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim()) {
@@ -93,5 +106,5 @@ export function useTripAgent({
     return [];
   });
 
-  return { isReady, isRunning: agent.isRunning, lines, send, error };
+  return { isReady, isRunning: agent.isRunning, lines, send, error, weather };
 }

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Navigate to the agent directory
-cd "$(dirname "$0")/../../agent" || exit 1
+# The agent's Python project lives at the repo root.
+cd "$(dirname "$0")/../.." || exit 1
 
 uv sync

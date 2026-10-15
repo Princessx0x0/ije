@@ -59,3 +59,18 @@ deployment_metadata.json
 
 # Firebase emulator logs
 *-debug.log
+
+# Agent Python environment (repo root project)
+.venv/
+
+# agents-cli and ADK local run artefacts (logs, local session store)
+.google-agents-cli/
+**/.adk/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# agents-cli eval outputs (traces and grades)
+artifacts/
+deployment_metadata.json.lock

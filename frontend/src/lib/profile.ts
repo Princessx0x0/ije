@@ -3,7 +3,16 @@
 import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc, writeBatch } from "firebase/firestore";
 
 import { firestore } from "./firebase";
-import { CURRENCIES, type ItineraryItem, type PartyNeeds, type Persona, type Trip, type TripSummary, type Vibe } from "./schema";
+import {
+  CURRENCIES,
+  type ItineraryItem,
+  type PartyNeeds,
+  type Persona,
+  type StayOption,
+  type Trip,
+  type TripSummary,
+  type Vibe,
+} from "./schema";
 
 /*
  * Durable user data in Firestore (backend contract, "Shared state"):
@@ -124,6 +133,15 @@ export async function loadTrip(uid: string, tripId: string): Promise<SavedTrip |
     party_needs: d.party_needs ?? NO_PARTY_NEEDS,
   };
   return { trip, vibe: d.vibe as Vibe };
+}
+
+/** The stay suggestions update the canvas writes: place IDs and links only. Exported for the rules tests. */
+export function staysWrite(stays: StayOption[]) {
+  return { stay_options: stays.map((s) => ({ ...s, name: "" })), updatedAt: serverTimestamp() };
+}
+
+export async function saveStays(uid: string, tripId: string, stays: StayOption[]): Promise<void> {
+  await setDoc(doc(firestore(), "users", uid, "trips", tripId), staysWrite(stays), { merge: true });
 }
 
 export async function saveItinerary(uid: string, tripId: string, items: ItineraryItem[]): Promise<void> {

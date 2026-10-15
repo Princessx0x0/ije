@@ -303,6 +303,10 @@
 .ije-item__reason { font-family: var(--font-text); font-size: 18px; line-height: 28px; }
 .ije-item__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-16); }
 
+.ije-day__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-16); }
+.ije-stays { display: flex; flex-direction: column; gap: var(--space-16); }
+.ije-stays__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-16); }
+
 /* ---------- Chat (side channel) ---------- */
 .ije-chat {
   display: flex;
