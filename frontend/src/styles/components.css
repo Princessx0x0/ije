@@ -145,6 +145,9 @@
   font-size: 16px;
   line-height: 24px;
 }
+.ije-field__input--short { max-width: 160px; }
+.ije-form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-24); }
+.ije-form-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-16); }
 .ije-field__error { margin: 0; font-family: var(--font-text); font-size: 14px; line-height: 20px; font-weight: 700; color: var(--danger); }
 .ije-field__input::placeholder { color: var(--ink-muted); }
 .ije-field__input[aria-invalid="true"] { outline: 2px solid var(--danger); outline-offset: 2px; }
