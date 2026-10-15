@@ -1,0 +1,11 @@
+# Upload for Cloud Build (scripts/deploy-frontend.sh). Listed explicitly so that
+# .env.production (public Firebase web config only) is uploaded and .env is not.
+.gcloudignore
+.git
+node_modules/
+.next/
+.env
+.env.local
+.env.*.local
+tests/
+*.log
