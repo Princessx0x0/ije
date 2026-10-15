@@ -51,3 +51,14 @@ unauthenticated ingress. Browsers cannot present Google IAM credentials.
   the US. The privacy policy must say so.
 - Before launching to real UK users: confirm the lawful basis for the UK to US
   transfer, and record it in the privacy policy.
+
+## Addendum: public ingress under Domain Restricted Sharing (2026-10-15)
+
+- The organisation enforces `iam.allowedPolicyMemberDomains`, so the frontend
+  service cannot grant `roles/run.invoker` to `allUsers`.
+- Instead, the `ije-frontend` Cloud Run service runs with the invoker IAM check
+  disabled (`--no-invoker-iam-check`). That is Google's documented way to serve a
+  public app under this policy. The org policy itself is unchanged.
+- Nothing else changes: identity is still enforced in the app (Firebase ID
+  tokens, verified by the agent and by `/api/places`), and Agent Runtime stays
+  IAM-only.

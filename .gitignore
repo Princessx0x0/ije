@@ -73,3 +73,4 @@ __pycache__/
 
 # agents-cli eval outputs (traces and grades)
 artifacts/
+deployment_metadata.json.lock
