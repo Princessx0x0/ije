@@ -16,7 +16,7 @@ rm -rf .venv agent/.venv
 agents-cli deploy -d agent_runtime \
   --project "$PROJECT" --region "$REGION" --agent-identity \
   --service-name ije \
-  --update-env-vars "GOOGLE_GENAI_USE_VERTEXAI=TRUE,GOOGLE_CLOUD_PROJECT=$PROJECT,GOOGLE_CLOUD_LOCATION=global,AGENT_ENGINE_ID=$ENGINE_ID,AGENT_ENGINE_LOCATION=$REGION" \
+  --update-env-vars "GOOGLE_GENAI_USE_VERTEXAI=TRUE,GOOGLE_CLOUD_PROJECT=$PROJECT,FIREBASE_PROJECT_ID=$PROJECT,GOOGLE_CLOUD_LOCATION=global,AGENT_ENGINE_ID=$ENGINE_ID,AGENT_ENGINE_LOCATION=$REGION" \
   --no-confirm-project --no-wait
 
 # Restore the local environment for development.

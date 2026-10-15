@@ -27,6 +27,10 @@ from agent.agent import root_agent
 load_dotenv()
 
 PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT"]
+# The Firebase project whose ID tokens we accept: the project ID string, which
+# is the tokens' "aud" claim. Not GOOGLE_CLOUD_PROJECT: Agent Runtime sets that
+# to the project NUMBER, and every token would then be refused.
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID") or PROJECT_ID
 # Set only on Agent Runtime. Its presence switches sessions to managed storage.
 AGENT_ENGINE_ID = os.getenv("AGENT_ENGINE_ID")
 AGENT_ENGINE_LOCATION = os.getenv("AGENT_ENGINE_LOCATION", "us-central1")
@@ -34,11 +38,25 @@ AGENT_ENGINE_LOCATION = os.getenv("AGENT_ENGINE_LOCATION", "us-central1")
 
 # ---------- Identity ----------
 
-firebase_admin.initialize_app(options={"projectId": PROJECT_ID})
+firebase_admin.initialize_app(options={"projectId": FIREBASE_PROJECT_ID})
 
 
 class AuthError(Exception):
     """Raised when a request has no valid Firebase ID token."""
+
+
+def token_problem(e: Exception) -> str:
+    """Say what went wrong, so logs and the UI do not call every failure "invalid"."""
+    if isinstance(e, firebase_auth.ExpiredIdTokenError):
+        return "Firebase ID token expired"
+    if isinstance(e, firebase_auth.RevokedIdTokenError):
+        return "Firebase ID token revoked"
+    if isinstance(e, firebase_auth.UserDisabledError):
+        return "Firebase user disabled"
+    if isinstance(e, firebase_auth.InvalidIdTokenError):
+        return f"Firebase ID token not valid for project {FIREBASE_PROJECT_ID} ({e})"
+    # Anything else is the server's problem (for example its Google credentials), not the user's token.
+    return f"Could not verify the Firebase ID token: server error {type(e).__name__}"
 
 
 def verified_user_id(input: RunAgentInput) -> str:
@@ -53,8 +71,8 @@ def verified_user_id(input: RunAgentInput) -> str:
         raise AuthError("Missing firebaseIdToken in forwardedProps")
     try:
         decoded = firebase_auth.verify_id_token(token, check_revoked=True)
-    except Exception as e:  # expired, revoked, wrong project, malformed
-        raise AuthError(f"Invalid Firebase ID token: {type(e).__name__}") from e
+    except Exception as e:  # expired, revoked, wrong project, malformed, or our credentials
+        raise AuthError(token_problem(e)) from e
     return decoded["uid"]
 
 
@@ -96,7 +114,7 @@ async def delete_my_sessions(body: DeleteSessionsRequest):
     try:
         uid = firebase_auth.verify_id_token(body.firebaseIdToken, check_revoked=True)["uid"]
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid Firebase ID token: {type(e).__name__}")
+        raise HTTPException(status_code=401, detail=token_problem(e))
     if session_service is None:
         return {"deleted": 0, "note": "in-memory sessions are not persisted"}
     listed = await session_service.list_sessions(app_name="ije", user_id=uid)
