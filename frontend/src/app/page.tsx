@@ -1,41 +1,35 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import { AuthGate } from "@/components/auth/AuthGate";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { LoadError, Loading, PROFILE_LOAD_ERROR } from "@/components/profile/LoadState";
+import { useProfile } from "@/components/profile/useProfile";
+import { homeFor } from "@/lib/profile";
 
+/**
+ * The landing route after sign-in or Continue as guest. Guests and full
+ * accounts are treated the same: no persona yet means onboarding, otherwise
+ * their trips.
+ */
 export default function Home() {
   return (
     <AuthGate>
-      <Account />
+      <RouteHome />
     </AuthGate>
   );
 }
 
-function Account() {
-  const { user, isGuest, signOut } = useAuth();
+function RouteHome() {
+  const router = useRouter();
+  const profile = useProfile();
+  const destination = profile.status === "ready" ? homeFor(profile.persona) : null;
 
-  return (
-    <main className="ije-status">
-      <h1>Ije</h1>
-      <p>{isGuest ? "You are planning as a guest." : `Signed in as ${user?.email ?? "your account"}.`}</p>
-      {isGuest && (
-        <p>
-          <Link href="/sign-in">Create an account</Link> to keep your trips.
-        </p>
-      )}
-      <button
-        type="button"
-        className="ije-link"
-        onClick={() => {
-          if (!isGuest || window.confirm("Signing out of a guest session loses its trips for good. Sign out anyway?")) {
-            void signOut();
-          }
-        }}
-      >
-        Sign out
-      </button>
-    </main>
-  );
+  useEffect(() => {
+    if (destination) router.replace(destination);
+  }, [destination, router]);
+
+  if (profile.status === "error") return <LoadError message={PROFILE_LOAD_ERROR} onRetry={profile.retry} />;
+  return <Loading />;
 }

@@ -56,3 +56,6 @@ node_modules/
 out/
 next-env.d.ts
 deployment_metadata.json
+
+# Firebase emulator logs
+*-debug.log

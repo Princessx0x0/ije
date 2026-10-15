@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// Each user, guest or full account, can read and write only users/{their uid}
+// and the documents beneath it. Nothing else is reachable from the browser.
+//
+// Health fields (diet, allergies, access needs) are refused unless the user
+// doc records explicit consent to the current wording (HEALTH_CONSENT_VERSION
+// in frontend/src/lib/profile.ts; keep the two in step). See
+// docs/privacy-governance.md.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function consented(userDoc) {
+      return userDoc.get('consents', {}).get('health', {}).get('granted', false) == true
+        && userDoc.get('consents', {}).get('health', {}).get('version', '') == '2026-10-15';
+    }
+
+    function noHealth(needs) {
+      return needs.get('dietary', []).size() == 0
+        && needs.get('allergies', []).size() == 0
+        && needs.get('accessibility', []).size() == 0;
+    }
+
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && (consented(request.resource.data) || noHealth(request.resource.data.get('persona', {})));
+    }
+
+    // Trips and anything else under the user. party_needs is health data
+    // about other travellers too, so it needs the same consent.
+    match /users/{uid}/{collection}/{document=**} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && (noHealth(request.resource.data.get('party_needs', {}))
+            || consented(get(/databases/$(database)/documents/users/$(uid)).data));
+    }
+  }
+}

@@ -35,14 +35,17 @@ ADRs live in `docs/decisions/`. Read the relevant one before touching identity, 
 
 ## Current state and next work
 
-- `app/page.tsx` is a **placeholder** from the auth step (shows "Signed in as" and Sign out). It is not a real screen.
-- Next: after sign-in or Continue as guest, route new users (no persona in Firestore) to onboarding, and returning users to their trips/canvas. Guests should never be pushed to sign out or sign up to proceed; the upgrade prompt is optional and lives in the account menu.
-- Then: trip details, vibe sliders, itinerary canvas, PDF export, preferences, delete account (order in `docs/backend-contract.md`), privacy policy page.
+- Routing after sign-in or Continue as guest: `app/page.tsx` reads `users/{uid}.persona` from Firestore (`lib/profile.ts`) and sends new users to `/onboarding`, returning users to `/trips`. `/trips` also bounces to onboarding if there is no persona. Guests and full accounts take the same path.
+- Guests are never pushed to sign out or sign up. The upgrade prompt is optional and lives only in `components/auth/AccountMenu.tsx`; `/sign-in` offers guests "Not now".
+- Firestore layout: `users/{uid}` holds `{ persona, consents, updatedAt }`, trips go in `users/{uid}/trips/{tripId}`. Rules are in `firestore.rules`, deployed with `firebase deploy --only firestore:rules` (`firebase.json`). TS mirrors of `agent/schema.py` are in `lib/schema.ts`.
+- Health fields (diet, allergies, access needs, trip `party_needs`) need explicit consent: `savePersona` empties them without it, and the rules refuse them unless `consents.health` matches `HEALTH_CONSENT_VERSION`. Change the version in `lib/profile.ts` and `firestore.rules` together.
+- Then: trip details, vibe sliders, itinerary canvas, PDF export, preferences, delete account (order in `docs/backend-contract.md`). The privacy policy page waits for the governance phase: see `docs/privacy-governance.md`, and keep it current as features change what data is collected or where it goes.
 
 ## Commands (run in `frontend/`)
 
 - `npm run dev`: UI on :3000 and agent on :8000
 - `npm run typecheck`
+- `npm run test:rules`: Firestore rules tests on the emulator (needs the Firebase CLI and Java 21 on PATH). Must pass before `firebase deploy --only firestore:rules` (run from the repo root).
 - `npm run build`
 - `npm run tokens`: regenerate `tokens.css` from `tokens.json`
 - `npm run verify:forwarded-props`: re-run after any `@copilotkit/*` or `@ag-ui/*` upgrade
