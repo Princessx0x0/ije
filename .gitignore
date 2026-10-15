@@ -66,3 +66,7 @@ deployment_metadata.json
 # agents-cli and ADK local run artefacts (logs, local session store)
 .google-agents-cli/
 **/.adk/
+
+# Python bytecode
+__pycache__/
+*.pyc

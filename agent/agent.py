@@ -11,52 +11,21 @@ Served two ways:
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Optional
+from datetime import datetime, timezone
+from typing import Optional
 
 from google.adk.agents import LlmAgent
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.apps import App
+from google.adk.models import Gemini
 from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
-from google.adk.tools import ToolContext
 from google.genai import types
-from pydantic import ValidationError
 
-from .schema import Trip
+from .tools.planning import get_forecast, search_places, update_itinerary, update_stays
 
 AGENT_NAME = "IjeAgent"
 STATE_KEYS = ("persona", "vibe", "trip")
-
-
-# ---------- Tools ----------
-
-def update_itinerary(tool_context: ToolContext, items: list[dict]) -> Dict[str, Any]:
-    """Replace the trip's itinerary with a new, complete list of items.
-
-    Always pass the FULL list of items, not just the changes.
-
-    Args:
-        items: Every itinerary item for the trip. Each item needs: item_id (str),
-            place_id (str), day (YYYY-MM-DD), slot ("morning" | "afternoon" | "evening"),
-            category ("sight" | "activity" | "food" | "shopping" | "nightlife"),
-            pick_type ("local" | "tourist"), reason (str, max 200 chars),
-            source_url (str, a full https URL).
-
-    Returns:
-        A status dict. On error, the message explains what to fix and retry.
-    """
-    trip = tool_context.state.get("trip")
-    if not trip:
-        return {"status": "error", "message": "No trip exists yet. Ask the user for destination, dates and budget first."}
-
-    try:
-        # Validate the whole trip, not just the items, so cross-field rules run.
-        validated = Trip.model_validate({**trip, "items": items})
-    except ValidationError as e:
-        return {"status": "error", "message": f"Itinerary rejected, fix and retry: {e}"}
-
-    tool_context.state["trip"] = validated.model_dump(mode="json")
-    return {"status": "success", "message": f"Itinerary updated with {len(items)} items."}
 
 
 # ---------- Callbacks ----------
@@ -77,12 +46,12 @@ def before_model_modifier(
     snapshot = {key: callback_context.state.get(key) for key in STATE_KEYS}
     state_json = json.dumps(snapshot, indent=2, default=str)
 
+    today = datetime.now(timezone.utc).date().isoformat()
     prefix = f"""You are Ije, a travel planner that builds day-by-day itineraries.
+Today is {today}.
 Current state (persona = the account holder, vibe = this trip's feel, trip = this trip):
 {state_json}
 
-If the trip is null or missing destination, dates or budget, ask the user to fill in the trip form.
-When you change the itinerary, call update_itinerary with the COMPLETE list of items.
 """
 
     instruction = llm_request.config.system_instruction
@@ -101,7 +70,13 @@ def stop_after_text_reply(
     if callback_context.agent_name != AGENT_NAME:
         return None
     content = llm_response.content
-    if content and content.parts and content.role == "model" and content.parts[0].text:
+    if not (content and content.parts and content.role == "model"):
+        return None
+    # End the turn on a plain text reply, but never on a response that also
+    # calls a tool ("Let me look that up" + function call), or planning stops.
+    has_text = any(p.text for p in content.parts)
+    calls_tool = any(p.function_call for p in content.parts)
+    if has_text and not calls_tool:
         callback_context._invocation_context.end_invocation = True
     return None
 
@@ -110,18 +85,59 @@ def stop_after_text_reply(
 
 root_agent = LlmAgent(
     name=AGENT_NAME,
-    model="gemini-2.5-flash",
+    # Retries ride out bursts of 429 RESOURCE_EXHAUSTED from shared capacity.
+    model=Gemini(
+        model="gemini-2.5-flash",
+        retry_options=types.HttpRetryOptions(attempts=5, initial_delay=2, max_delay=30),
+    ),
     instruction="""
-Plan trips that fit the persona, the vibe sliders and the party's needs.
+You plan trips that fit the persona, the vibe sliders and the group's needs, using
+only real data from your tools.
 
-RULES FOR ITINERARY ITEMS:
-1. Every item needs a short reason that names why it fits this traveller.
-2. Respect every dietary and accessibility need in trip.party_needs.
-3. Never schedule sunset or night activities in the morning or afternoon slot.
-4. Until a places search tool is available, set place_id to "unverified".
-5. If update_itinerary returns an error, read the message, fix the items and call it again.
+HOW TO PLAN (when asked to plan, or when the itinerary is empty):
+1. Call get_forecast once. Use real weather to place outdoor picks on dry days.
+   If it is unavailable, plan a sensible indoor and outdoor mix for the season and
+   never state temperatures or conditions.
+2. Call search_places for what this trip needs: sights, activities and places to
+   eat that suit the persona's interests and the vibe. Put needs in the query
+   ("halal restaurant", "step-free museum", "vegan cafe") and prefer places whose
+   wheelchair_accessible_entrance or serves_vegetarian_food match the needs.
+   Several focused searches beat one broad one.
+3. Build EVERY day from start_date to end_date with a morning, an afternoon and an
+   evening item, and at least one food item each day. Check opening_hours against
+   the day of the week and the slot (morning, afternoon or evening): never put a
+   place in a slot when it is closed. Spread areas sensibly and do not repeat a
+   place unless asked.
+4. Call update_itinerary once with the COMPLETE list. If it is rejected, fix every
+   problem it lists and call it again.
+5. Reply with two or three plain sentences: the shape of the trip and anything the
+   traveller should know (for example, rain on day 2 so the museums are there).
+
+THE VIBE (1 to 5):
+- energy: 1 slow and spacious, 5 packed. local_vs_tourist: 1 where locals go,
+  5 the famous sights; pick_type must say honestly which each item is.
+- refinement: 1 casual, 5 upscale. Match the budget: budget_total is for the
+  whole group for the whole trip.
+
+NEEDS ARE NOT OPTIONAL:
+- Respect every dietary need and allergy in persona and trip.party_needs in every
+  food pick, and every accessibility need in every pick. If you cannot find a
+  place that meets a need, say so instead of picking one that does not.
+
+REASONS:
+- One short sentence on why it fits this traveller ("Your love of art, at a slow
+  pace"). Never include the place's name: the app shows it.
+
+STAYS:
+- Only when asked where to stay: search_places with kind "lodging", then
+  update_stays with up to 3 hotels that suit the budget and needs.
+
+HONESTY:
+- Never invent places, hotels, prices, opening hours or weather. If a tool fails
+  or returns nothing suitable, say so plainly and suggest what the user can do.
+- Bookings, flights and transport are outside what you can do; say so if asked.
 """,
-    tools=[update_itinerary],
+    tools=[get_forecast, search_places, update_itinerary, update_stays],
     before_agent_callback=on_before_agent,
     before_model_callback=before_model_modifier,
     after_model_callback=stop_after_text_reply,

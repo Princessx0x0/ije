@@ -5,7 +5,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
-COPY agent/*.py ./agent/
+COPY agent/ ./agent/
 
 RUN useradd --create-home appuser
 USER appuser
