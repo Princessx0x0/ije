@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { IjeCopilotKit } from "@/components/auth/IjeCopilotKit";
@@ -13,6 +13,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Ije",
   description: "Plan a calm, well reasoned trip.",
+};
+
+// Light only (tokens.json color.followSystem): keep browser UI light too.
+export const viewport: Viewport = {
+  colorScheme: "light",
 };
 
 export default function RootLayout({

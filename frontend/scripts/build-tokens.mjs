@@ -45,10 +45,15 @@ const styles = t.type.groups
   )
   .join("\n\n");
 
+// followSystem: false keeps the app light whatever the OS says; other themes
+// then apply only through an explicit data-theme attribute.
+const followSystem = t.color.followSystem !== false;
 const darkBlocks = others
-  .map(
-    (theme) => `[data-theme="${theme}"] {\n${decls(theme)}\n  color-scheme: ${theme};\n}\n\n@media (prefers-color-scheme: ${theme}) {\n  :root:not([data-theme="${light}"]) {\n${decls(theme).replace(/^/gm, "  ")}\n    color-scheme: ${theme};\n  }\n}`,
-  )
+  .map((theme) => {
+    const explicit = `[data-theme="${theme}"] {\n${decls(theme)}\n  color-scheme: ${theme};\n}`;
+    if (!followSystem) return explicit;
+    return `${explicit}\n\n@media (prefers-color-scheme: ${theme}) {\n  :root:not([data-theme="${light}"]) {\n${decls(theme).replace(/^/gm, "  ")}\n    color-scheme: ${theme};\n  }\n}`;
+  })
   .join("\n\n");
 
 const css = `/* ${t.name} tokens: generated from tokens.json by scripts/build-tokens.mjs. Do not edit. */

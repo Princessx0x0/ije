@@ -7,7 +7,7 @@ Ije means journey in Igbo. The product is a calm, well reasoned itinerary: day b
 1. **The canvas is the product.** The itinerary is the main surface; chat is a side channel that can be hidden. Never design a screen around a chat window.
 2. **Calm over clever.** One action colour, generous space, soft shadows. Nothing glows, pulses or competes.
 3. **Separate with tone, not lines.** Cards never have borders. They lift off `paper` with `surface` and `shadow-card`, or recede with `inset`.
-4. **Legible for everyone.** Ije collects accessibility needs, so the interface must already meet them: hyperlegible text, 4.5:1 contrast in both themes, 48px touch targets, a visible focus ring.
+4. **Legible for everyone.** Ije collects accessibility needs, so the interface must already meet them: hyperlegible text, 4.5:1 contrast, 48px touch targets, a visible focus ring.
 
 ## Content fundamentals
 
@@ -25,7 +25,9 @@ Ije means journey in Igbo. The product is a calm, well reasoned itinerary: day b
 
 Colours that must be told apart also differ in lightness: the Local pick badge (`local-soft` with `on-local-soft`) and the Well known badge (`inset` with `ink`) read apart in greyscale.
 
-Both themes are checked: every text pair is 5.5:1 or more, most above 7:1.
+Every text pair is 5.5:1 or more, most above 7:1, in both palettes.
+
+**Ije is light only for now.** The app ignores the operating system's dark setting (`color.followSystem: false` in `tokens.json`). The dark palette is kept as a design record and applies only with an explicit `data-theme="dark"`, so it can return later as an opt-in.
 
 ### Type
 
@@ -42,7 +44,7 @@ The 8px scale is the only scale: `space-8` to `space-64`. Cards use `radius-24`,
 
 ### Elevation
 
-`shadow-card` for every card on paper: soft and tight, never wide. `shadow-raised` for a small control sitting on `inset` (the selected segment). In dark mode, tone does most of the work and shadows are nearly invisible by design.
+`shadow-card` for every card on paper: soft and tight, never wide. `shadow-raised` for a small control sitting on `inset` (the selected segment). In the dark palette, tone does most of the work and shadows are nearly invisible by design.
 
 ## Iconography
 
