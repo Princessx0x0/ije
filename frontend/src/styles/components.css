@@ -82,6 +82,10 @@
   box-shadow: var(--shadow-card);
 }
 .ije-card--roomy { padding: var(--space-40); gap: var(--space-32); }
+/* A whole card that is a link (a trip in the list). */
+.ije-card--link { color: var(--ink); text-decoration: none; transition: box-shadow 120ms ease; }
+.ije-card--link:hover { color: var(--ink); box-shadow: var(--shadow-card), 0 0 0 2px var(--primary-soft); }
+.ije-card--link:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .ije-card--inset { background: var(--inset); box-shadow: none; padding: var(--space-24); border-radius: var(--radius-16); }
 
 /* ---------- Chip (toggle) ---------- */

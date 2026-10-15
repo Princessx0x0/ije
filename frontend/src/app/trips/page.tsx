@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -9,6 +10,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { LoadError, Loading, PROFILE_LOAD_ERROR } from "@/components/profile/LoadState";
 import { useProfile } from "@/components/profile/useProfile";
 import { listTrips } from "@/lib/profile";
+import { formatDates } from "@/lib/format";
 import type { TripSummary } from "@/lib/schema";
 
 export default function TripsPage() {
@@ -35,7 +37,12 @@ function Trips() {
     <>
       <AppHeader />
       <main className="ije-page">
-        <h1 className="ije-page__title">Your trips</h1>
+        <div className="ije-page__head">
+          <h1 className="ije-page__title">Your trips</h1>
+          <Link href="/trips/new" className="ije-button">
+            Plan a trip
+          </Link>
+        </div>
         <TripList />
       </main>
     </>
@@ -44,6 +51,7 @@ function Trips() {
 
 function TripList() {
   const { user } = useAuth();
+  const router = useRouter();
   const uid = user?.uid ?? null;
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<{ key: string; trips: TripSummary[] | "error" } | null>(null);
@@ -65,6 +73,12 @@ function TripList() {
   }, [uid, key]);
 
   const trips = result?.key === key ? result.trips : null;
+  const empty = Array.isArray(trips) && trips.length === 0;
+
+  // No trips yet: there is nothing to list, so go straight to planning one.
+  useEffect(() => {
+    if (empty) router.replace("/trips/new");
+  }, [empty, router]);
 
   if (trips === null) return <p aria-busy="true">Loading your trips</p>;
   if (trips === "error") {
@@ -79,32 +93,17 @@ function TripList() {
       </div>
     );
   }
-  if (trips.length === 0) {
-    return (
-      <section className="ije-card">
-        <h2 className="ije-card__title">No trips yet</h2>
-        <p>When you plan a trip, it will be kept here.</p>
-      </section>
-    );
-  }
+  if (empty) return null;
   return (
     <ul className="ije-trips">
       {trips.map((trip) => (
-        <li key={trip.trip_id} className="ije-card">
-          <h2 className="ije-card__title">{trip.destination || "Untitled trip"}</h2>
-          <p className="ije-caption">{formatDates(trip.start_date, trip.end_date)}</p>
+        <li key={trip.trip_id}>
+          <Link href={`/trips/${trip.trip_id}`} className="ije-card ije-card--link">
+            <h2 className="ije-card__title">{trip.destination || "Untitled trip"}</h2>
+            <p className="ije-caption">{formatDates(trip.start_date, trip.end_date)}</p>
+          </Link>
         </li>
       ))}
     </ul>
   );
-}
-
-const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-
-function formatDates(start: string, end: string): string {
-  const parse = (d: string) => new Date(`${d}T00:00:00Z`);
-  const a = parse(start);
-  const b = parse(end);
-  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return "Dates not set";
-  return start === end ? DATE.format(a) : DATE.formatRange(a, b);
 }

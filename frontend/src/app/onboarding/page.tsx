@@ -102,7 +102,8 @@ function PersonaForm({ saved, savedConsent }: { saved: Persona | null; savedCons
         },
         healthConsent,
       );
-      router.replace("/trips");
+      // A new user goes straight into planning; editing preferences returns to their trips.
+      router.replace(saved ? "/trips" : "/trips/new");
     } catch (err) {
       console.error("Could not save persona", err);
       setError("We could not save your preferences. Check your connection and try again.");

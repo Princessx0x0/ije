@@ -1,14 +1,14 @@
 "use client";
 
-import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc, writeBatch } from "firebase/firestore";
 
 import { firestore } from "./firebase";
-import { CURRENCIES, type Persona, type TripSummary } from "./schema";
+import { CURRENCIES, type ItineraryItem, type PartyNeeds, type Persona, type Trip, type TripSummary, type Vibe } from "./schema";
 
 /*
  * Durable user data in Firestore (backend contract, "Shared state"):
  *   users/{uid}                 { persona, consents, updatedAt }
- *   users/{uid}/trips/{tripId}  Trip
+ *   users/{uid}/trips/{tripId}  { ...Trip, vibe, createdAt, updatedAt }
  * Security rules (firestore.rules) let a user touch only their own path.
  * The uid always comes from the signed-in Firebase user, never from input.
  */
@@ -60,8 +60,74 @@ export function personaWrite(persona: Persona, healthConsent: boolean) {
   };
 }
 
+export const NO_PARTY_NEEDS: PartyNeeds = { dietary: [], allergies: [], accessibility: [] };
+
+/**
+ * Withdrawing consent also clears party_needs on every trip, in the same
+ * atomic batch, so no health data is left behind (and later itinerary saves
+ * to those trips still pass the rules).
+ */
 export async function savePersona(uid: string, persona: Persona, healthConsent: boolean): Promise<void> {
-  await setDoc(doc(firestore(), "users", uid), personaWrite(persona, healthConsent), { merge: true });
+  const db = firestore();
+  const batch = writeBatch(db);
+  batch.set(doc(db, "users", uid), personaWrite(persona, healthConsent), { merge: true });
+  if (!healthConsent) {
+    const trips = await getDocs(collection(db, "users", uid, "trips"));
+    for (const trip of trips.docs) batch.set(trip.ref, partyNeedsClear(), { merge: true });
+  }
+  await batch.commit();
+}
+
+/** The trip update that removes party needs. Exported for the rules tests. */
+export function partyNeedsClear() {
+  return { party_needs: NO_PARTY_NEEDS, updatedAt: serverTimestamp() };
+}
+
+/** A new trip as the app writes it. Exported for the rules tests. */
+export function tripWrite(trip: Trip, vibe: Vibe) {
+  return { ...trip, vibe, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+}
+
+/** The itinerary update the canvas writes after each agent run. Exported for the rules tests. */
+export function itineraryWrite(items: ItineraryItem[]) {
+  return { items, updatedAt: serverTimestamp() };
+}
+
+/** Creates the trip and returns its id, which is also its trip_id and agent thread id. */
+export async function createTrip(uid: string, draft: Omit<Trip, "trip_id">, vibe: Vibe): Promise<string> {
+  const ref = doc(collection(firestore(), "users", uid, "trips"));
+  await setDoc(ref, tripWrite({ ...draft, trip_id: ref.id }, vibe));
+  return ref.id;
+}
+
+export interface SavedTrip {
+  trip: Trip;
+  vibe: Vibe;
+}
+
+/** The trip split into what the agent reads (trip, vibe), or null if it does not exist. */
+export async function loadTrip(uid: string, tripId: string): Promise<SavedTrip | null> {
+  const snap = await getDoc(doc(firestore(), "users", uid, "trips", tripId));
+  if (!snap.exists()) return null;
+  const d = snap.data();
+  const trip: Trip = {
+    trip_id: snap.id,
+    destination: d.destination,
+    start_date: d.start_date,
+    end_date: d.end_date,
+    budget_total: d.budget_total,
+    base_place_id: d.base_place_id ?? null,
+    items: d.items ?? [],
+    stay_options: d.stay_options ?? [],
+    travellers: d.travellers,
+    group_type: d.group_type,
+    party_needs: d.party_needs ?? NO_PARTY_NEEDS,
+  };
+  return { trip, vibe: d.vibe as Vibe };
+}
+
+export async function saveItinerary(uid: string, tripId: string, items: ItineraryItem[]): Promise<void> {
+  await setDoc(doc(firestore(), "users", uid, "trips", tripId), itineraryWrite(items), { merge: true });
 }
 
 export async function listTrips(uid: string): Promise<TripSummary[]> {

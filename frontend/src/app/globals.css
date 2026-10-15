@@ -133,6 +133,13 @@ a:hover {
   flex-direction: column;
   gap: var(--space-32);
 }
+.ije-page__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+}
 .ije-page__title {
   font-size: 48px;
   line-height: 52px;
