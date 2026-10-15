@@ -287,6 +287,62 @@
 .ije-menu__who { font-family: var(--font-text); font-size: 14px; line-height: 20px; font-weight: 700; color: var(--ink-muted); overflow-wrap: anywhere; }
 .ije-menu__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-16); }
 
+/* ---------- Itinerary: days and item cards ---------- */
+.ije-itinerary { display: flex; flex-direction: column; gap: var(--space-48); }
+.ije-day { display: flex; flex-direction: column; gap: var(--space-16); }
+.ije-day__title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 500;
+  font-variation-settings: "opsz" 32;
+}
+.ije-day__items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-16); }
+.ije-item { gap: var(--space-8); padding: var(--space-24); }
+.ije-item__slot { margin: 0; color: var(--ink-muted); }
+.ije-item__reason { font-family: var(--font-text); font-size: 18px; line-height: 28px; }
+.ije-item__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-16); }
+
+/* ---------- Chat (side channel) ---------- */
+.ije-chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-24);
+  border-radius: var(--radius-24);
+  background: var(--inset);
+  color: var(--ink);
+}
+.ije-chat__title { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 600; font-variation-settings: "opsz" 22; }
+.ije-chat__log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-8); max-height: 50vh; overflow-y: auto; }
+.ije-chat__line {
+  max-width: 90%;
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--radius-16);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 24px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ije-chat__line--user { align-self: flex-end; background: var(--primary-soft); color: var(--on-primary-soft); }
+.ije-chat__line--assistant { align-self: flex-start; background: var(--surface); }
+.ije-chat__form { display: flex; gap: var(--space-8); }
+.ije-chat__form .ije-field__input { flex: 1; background: var(--surface); }
+
+/* ---------- Visually hidden, still read aloud ---------- */
+.ije-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ije-button { transition: none; }
 }
