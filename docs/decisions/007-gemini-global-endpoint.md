@@ -1,6 +1,6 @@
 # ADR 007: Call Gemini through the global endpoint
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR 009 (Gemini now runs on the `us` multi-region)
 - **Date:** 2026-10-15
 
 ## Context

@@ -26,7 +26,7 @@ Repeat with `ije-holdout.json` only when you think you are done. Results land in
 - `plan_rules` (code, 0 or 1): what the agent did. Plans need the forecast first and
   an accepted `update_itinerary`; stay requests need accepted `update_stays`; no
   unknown tools, no `unverified` places, no unrequested changes.
-- `ije_judge` (Gemini 2.5 Pro judge, 1 to 5): the case `reference` is the expected
+- `ije_judge` (Gemini 4 Argon judge on the global endpoint, 1 to 5): the case `reference` is the expected
   behaviour. Caps for false claims, invented data and ignored needs.
 
 **Bar:** `plan_rules` 1 and `ije_judge` >= 4 on every case, core and held out.

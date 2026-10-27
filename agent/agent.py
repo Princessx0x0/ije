@@ -11,6 +11,7 @@ Served two ways:
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -27,6 +28,17 @@ from .tools.rules import call_from_code, combined_needs
 
 AGENT_NAME = "IjeAgent"
 STATE_KEYS = ("persona", "vibe", "trip")
+
+# Model Armor screens every prompt and response (ADR 009). Agent Runtime must
+# never serve the agent unscreened, so a missing template stops it starting.
+MODEL_ARMOR_TEMPLATE = os.environ.get("IJE_MODEL_ARMOR_TEMPLATE")
+if os.environ.get("AGENT_ENGINE_ID") and not MODEL_ARMOR_TEMPLATE:
+    raise RuntimeError("IJE_MODEL_ARMOR_TEMPLATE must be set on Agent Runtime (ADR 009).")
+
+BLOCKED_REPLY = (
+    "I can't help with that. I can plan your days, suggest places to eat and stay, "
+    "and work around the weather and your group's needs."
+)
 
 
 # ---------- Callbacks ----------
@@ -96,6 +108,10 @@ def after_model(
 ) -> Optional[LlmResponse]:
     if callback_context.agent_name != AGENT_NAME:
         return None
+    # A prompt Model Armor blocked comes back with no content, only the reason.
+    if llm_response.error_code == types.BlockedReason.MODEL_ARMOR:
+        callback_context._invocation_context.end_invocation = True
+        return LlmResponse(content=types.Content(role="model", parts=[types.Part(text=BLOCKED_REPLY)]))
     content = llm_response.content
     if not (content and content.parts and content.role == "model"):
         return None
@@ -115,9 +131,17 @@ root_agent = LlmAgent(
     name=AGENT_NAME,
     # Retries ride out bursts of 429 RESOURCE_EXHAUSTED from shared capacity.
     model=Gemini(
-        model="gemini-2.5-flash",
+        model="gemini-3.8-flash",
         retry_options=types.HttpRetryOptions(attempts=5, initial_delay=2, max_delay=30),
     ),
+    generate_content_config=types.GenerateContentConfig(
+        model_armor_config=types.ModelArmorConfig(
+            prompt_template_name=MODEL_ARMOR_TEMPLATE,
+            response_template_name=MODEL_ARMOR_TEMPLATE,
+        )
+    )
+    if MODEL_ARMOR_TEMPLATE
+    else None,
     instruction="""
 You plan trips that fit the persona, the vibe sliders and the group's needs, using
 only real data from your tools.
