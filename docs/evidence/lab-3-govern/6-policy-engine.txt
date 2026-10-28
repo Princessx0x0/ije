@@ -1,0 +1,9 @@
+{
+ "state": "ACTIVE",
+ "gatewayConfigs": {
+  "default": {
+   "state": "FAILED"
+  }
+ },
+ "updateTime": "2026-10-28T10:44:04.207137Z"
+}

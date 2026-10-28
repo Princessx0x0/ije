@@ -40,8 +40,8 @@
                   "trip": {
                     "trip_id": "eval-6",
                     "destination": "Paris",
-                    "start_date": "2026-10-21",
-                    "end_date": "2026-10-22",
+                    "start_date": "2026-11-03",
+                    "end_date": "2026-11-04",
                     "budget_total": {
                       "amount_minor": 160000,
                       "currency": "GBP"
@@ -112,8 +112,8 @@
                   "trip": {
                     "trip_id": "eval-7",
                     "destination": "Barcelona",
-                    "start_date": "2026-11-09",
-                    "end_date": "2026-11-10",
+                    "start_date": "2026-11-22",
+                    "end_date": "2026-11-23",
                     "budget_total": {
                       "amount_minor": 80000,
                       "currency": "GBP"
@@ -182,8 +182,8 @@
                   "trip": {
                     "trip_id": "eval-8",
                     "destination": "Porto",
-                    "start_date": "2026-11-19",
-                    "end_date": "2026-11-20",
+                    "start_date": "2026-12-02",
+                    "end_date": "2026-12-03",
                     "budget_total": {
                       "amount_minor": 200000,
                       "currency": "GBP"

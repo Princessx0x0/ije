@@ -58,5 +58,14 @@ Checked on 27 October 2026:
   Gemini does, including health details; `docs/privacy-governance.md` records it.
 - Responses blocked by the template are not yet mapped to a friendly reply; a
   blocked response surfaces as an error. Map it once its shape is confirmed.
+- The `us` multi-region has no mTLS hostname: `aiplatform.us.rep.mtls.googleapis.com`
+  does not resolve. On Agent Runtime the SDKs see a client certificate and switch
+  to mTLS hosts, so the first deploy (28 October 2026) failed every Gemini call
+  with a DNS error. The agent now runs with `GOOGLE_API_USE_CLIENT_CERTIFICATE=false`
+  (`scripts/deploy-agent.sh`), so no client presents the certificate or uses mTLS
+  hosts. `GOOGLE_API_USE_MTLS_ENDPOINT=never` was tried first and is not enough:
+  google-genai's async google-auth transport ignores it. This blocks the ADR 008 follow-up (restore token
+  binding) for Gemini until Google serves an mTLS host for `us`, or Gemini moves
+  back to an endpoint that has one.
 - Eval scores from the new judge are not comparable with old 2.5 Pro scores.
   Re-run the full core and held-out sets before deploying.

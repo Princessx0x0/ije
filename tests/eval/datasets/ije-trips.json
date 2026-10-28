@@ -36,8 +36,8 @@
                   "trip": {
                     "trip_id": "eval-1",
                     "destination": "Lisbon",
-                    "start_date": "2026-10-19",
-                    "end_date": "2026-10-21",
+                    "start_date": "2026-11-01",
+                    "end_date": "2026-11-03",
                     "budget_total": {
                       "amount_minor": 150000,
                       "currency": "GBP"
@@ -108,8 +108,8 @@
                   "trip": {
                     "trip_id": "eval-2",
                     "destination": "Istanbul",
-                    "start_date": "2026-11-24",
-                    "end_date": "2026-11-26",
+                    "start_date": "2026-12-07",
+                    "end_date": "2026-12-09",
                     "budget_total": {
                       "amount_minor": 240000,
                       "currency": "GBP"
@@ -184,8 +184,8 @@
                   "trip": {
                     "trip_id": "eval-3",
                     "destination": "Kyoto",
-                    "start_date": "2026-12-14",
-                    "end_date": "2026-12-15",
+                    "start_date": "2026-12-27",
+                    "end_date": "2026-12-28",
                     "budget_total": {
                       "amount_minor": 90000,
                       "currency": "GBP"
@@ -253,8 +253,8 @@
                   "trip": {
                     "trip_id": "eval-4",
                     "destination": "Edinburgh",
-                    "start_date": "2026-11-14",
-                    "end_date": "2026-11-16",
+                    "start_date": "2026-11-27",
+                    "end_date": "2026-11-29",
                     "budget_total": {
                       "amount_minor": 120000,
                       "currency": "GBP"
@@ -320,8 +320,8 @@
                   "trip": {
                     "trip_id": "eval-5",
                     "destination": "Rome",
-                    "start_date": "2026-11-04",
-                    "end_date": "2026-11-05",
+                    "start_date": "2026-11-17",
+                    "end_date": "2026-11-18",
                     "budget_total": {
                       "amount_minor": 100000,
                       "currency": "GBP"
