@@ -13,8 +13,10 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
+from dotenv import load_dotenv
 from google.adk.agents import LlmAgent
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.apps import App
@@ -31,6 +33,9 @@ STATE_KEYS = ("persona", "vibe", "trip")
 
 # Model Armor screens every prompt and response (ADR 009). Agent Runtime must
 # never serve the agent unscreened, so a missing template stops it starting.
+# Load agent/.env first: the package imports this module before main.py can,
+# so local runs were unscreened. Never overrides Agent Runtime's real env vars.
+load_dotenv(Path(__file__).with_name(".env"))
 MODEL_ARMOR_TEMPLATE = os.environ.get("IJE_MODEL_ARMOR_TEMPLATE")
 if os.environ.get("AGENT_ENGINE_ID") and not MODEL_ARMOR_TEMPLATE:
     raise RuntimeError("IJE_MODEL_ARMOR_TEMPLATE must be set on Agent Runtime (ADR 009).")
@@ -50,11 +55,40 @@ def on_before_agent(callback_context: CallbackContext):
     return None
 
 
+def _is_blocked_reply(content: types.Content) -> bool:
+    return content.role == "model" and any(p.text == BLOCKED_REPLY for p in content.parts or [])
+
+
+def _is_user_message(content: types.Content) -> bool:
+    parts = content.parts or []
+    return content.role == "user" and any(p.text for p in parts) and not any(p.function_response for p in parts)
+
+
+def drop_blocked_turns(contents: list[types.Content]) -> list[types.Content]:
+    """Leave out every earlier turn Model Armor blocked, from the user's message to the refusal.
+
+    Model Armor screens the whole prompt, history included, so one blocked
+    message left in the history would get every later request blocked too.
+    """
+    kept: list[types.Content] = []
+    for content in contents:
+        if _is_blocked_reply(content):
+            while kept and not _is_user_message(kept[-1]):
+                kept.pop()
+            if kept:
+                kept.pop()
+            continue
+        kept.append(content)
+    return kept
+
+
 def before_model_modifier(
     callback_context: CallbackContext, llm_request: LlmRequest
 ) -> Optional[LlmResponse]:
     if callback_context.agent_name != AGENT_NAME:
         return None
+
+    llm_request.contents = drop_blocked_turns(llm_request.contents)
 
     snapshot = {key: callback_context.state.get(key) for key in STATE_KEYS}
     state_json = json.dumps(snapshot, indent=2, default=str)
