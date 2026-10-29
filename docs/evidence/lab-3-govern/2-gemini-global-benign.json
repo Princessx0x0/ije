@@ -1,0 +1,22 @@
+{
+  "error": {
+    "code": 400,
+    "message": "The template named 'projects/ije-travel-511008/locations/us-central1/templates/ije-guardrails' was not found. Please check if the correct template name is provided.",
+    "status": "INVALID_ARGUMENT",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "reason": "TEMPLATE_NOT_FOUND",
+        "domain": "modelarmor.googleapis.com",
+        "metadata": {
+          "template_name": "projects/ije-travel-511008/locations/us-central1/templates/ije-guardrails"
+        }
+      },
+      {
+        "@type": "type.googleapis.com/google.rpc.LocalizedMessage",
+        "locale": "en-US",
+        "message": "The template named 'projects/ije-travel-511008/locations/us-central1/templates/ije-guardrails' was not found. Please check if the correct template name is provided."
+      }
+    ]
+  }
+}

@@ -13,7 +13,8 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 
-JUDGE_MODEL = "gemini-2.5-pro"
+# A different model from the agent, so it never grades its own work.
+JUDGE_MODEL = "gemini-4-argon"
 _local = threading.local()
 
 
@@ -28,7 +29,7 @@ def _client() -> genai.Client:
         client = _local.client = genai.Client(
             vertexai=True,
             project=os.environ.get("GOOGLE_CLOUD_PROJECT", "ije-travel-511008"),
-            location=os.environ.get("IJE_JUDGE_LOCATION", "us-central1"),
+            location=os.environ.get("IJE_JUDGE_LOCATION", "global"),
         )
     return client
 

@@ -47,6 +47,9 @@ def create_session_with_state(base_url, app_name, user_id, *, headers, prior_eve
 
 
 cmd_generate.create_session = create_session_with_state
+# The agent never streams (ADR 009), so no bytes arrive during a model call and
+# writing a full itinerary can take over 90 s; 120 s dropped heavy cases.
+_adk_client._RUN_SSE_TIMEOUT = 300
 
 if __name__ == "__main__":
     sys.argv[0] = "agents-cli"

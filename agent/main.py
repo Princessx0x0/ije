@@ -20,6 +20,7 @@ from ag_ui_adk import ADKAgent, add_adk_fastapi_endpoint
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from firebase_admin import auth as firebase_auth
+from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.sessions import VertexAiSessionService
 from pydantic import BaseModel
 
@@ -93,8 +94,15 @@ session_service = (
     else None
 )
 
+
+def run_config(_input: RunAgentInput) -> RunConfig:
+    """No streaming: Model Armor only screens non-streamed Gemini calls (ADR 009)."""
+    return RunConfig(streaming_mode=StreamingMode.NONE, save_input_blobs_as_artifacts=False)
+
+
 adk_ije_agent = ADKAgent(
     adk_agent=root_agent,
+    run_config_factory=run_config,
     app_name="ije",
     user_id_extractor=verified_user_id,
     session_service=session_service,

@@ -1,0 +1,3 @@
+no-allergy-clashes  no-allergy-clashes
+    The agent must never recommend a place to eat that clashes with an allergy the traveller has told it about
+    identity: principal://agents.global.org-167325235444.system.id.goog/resources/aiplatform/projects/788712976210/locations/us-central1/reasoningEngines/2768957581710852096

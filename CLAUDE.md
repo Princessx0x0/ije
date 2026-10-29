@@ -42,6 +42,7 @@ ADRs live in `docs/decisions/`. Read the relevant one before touching identity, 
 - Firestore layout: `users/{uid}` holds `{ persona, consents, updatedAt }`; trips are `users/{uid}/trips/{tripId}` holding `{ ...Trip, vibe, createdAt, updatedAt }` (`vibe` is per trip and sent to the agent separately). Rules are in `firestore.rules`, deployed with `firebase deploy --only firestore:rules` (`firebase.json`). TS mirrors of `agent/schema.py` are in `lib/schema.ts`.
 - Health fields (diet, allergies, access needs, trip `party_needs`) need explicit consent: `savePersona` empties them without it and clears `party_needs` on every trip in the same batch, and the rules refuse them unless `consents.health` matches `HEALTH_CONSENT_VERSION`. Change the version in `lib/profile.ts` and `firestore.rules` together.
 - Agent tools (ADR 006, `agent/tools/`): `get_forecast`, `search_places`, `update_itinerary`, `update_stays` on Google Maps Platform via OAuth (no keys). Hard rules live in the tools, not only the prompt (`agent/tools/rules.py`, unit-tested): full days, food daily, searched places only, needs added to every search, allergy clashes rejected, no place names in stored text. `after_model` in `agent/agent.py` repairs tool calls Gemini writes as Python (parsed with `ast`, never executed).
+- Model (ADR 009): `gemini-3.8-flash` on the `us` multi-region (`GOOGLE_CLOUD_LOCATION=us`), every call screened by the `ije-guardrails` Model Armor template in Model Armor's `us` location (`IJE_MODEL_ARMOR_TEMPLATE`, required on Agent Runtime). Never stream: Model Armor skips streamed calls (`run_config` in `agent/main.py`). Blocked prompts get `BLOCKED_REPLY`. The eval judge is `gemini-4-argon`.
 - Maps terms: store only place IDs, our own text and links. Names and addresses come live from `/api/places`. Weather is never stored. Keep the "Places and weather from Google Maps" attribution on the canvas.
 - Agent Identity token binding is switched off on the deployed agent (ADR 008, `GOOGLE_API_ENABLE_RUNTIME_BOUND_TOKEN=false`) because `firebase-admin` and `agent/tools/maps.py` send plain bearer tokens. Tracked follow-up: move those calls to mTLS, then remove the opt-out.
 - On Agent Runtime `GOOGLE_CLOUD_PROJECT` is the project number; the Firebase project comes from `FIREBASE_PROJECT_ID`.
@@ -51,7 +52,7 @@ ADRs live in `docs/decisions/`. Read the relevant one before touching identity, 
 ## Where we stopped (2026-10-15)
 
 - **Live:** frontend https://ije-frontend-788712976210.us-central1.run.app (Cloud Run `ije-frontend`); agent on Agent Runtime engine `2768957581710852096`. A full itinerary was produced end to end on the live site.
-- **What changed and why:** `docs/changes/2026-10-15.md` (and the plain-language PDF beside it). Decisions: ADRs 001 to 008 in `docs/decisions/`. Read these before revisiting any of those choices.
+- **What changed and why:** `docs/changes/2026-10-15.md` (and the plain-language PDF beside it). Decisions: ADRs 001 to 009 in `docs/decisions/`. Read these before revisiting any of those choices.
 - **Evals at the bar:** see `tests/eval/README.md`. Re-run before any agent deploy.
 - **Branches:** PRs #1 to #3 are stacked (merge in order). Until merged, `main` does not have this file's current content.
 
@@ -61,7 +62,7 @@ Do these before inviting real users, roughly in this order. Each needs the user'
 
 1. **Secrets hygiene:** remove the unused CopilotKit keys in `agent/.env` and the `GOOGLE_API_KEY` in `frontend/.env`, then revoke them.
 2. **Delete account** (UK GDPR erasure, `docs/backend-contract.md` order): agent sessions, then Firestore `users/{uid}`, then the Firebase user.
-3. **Governance decisions and privacy page:** controller, lawful basis, UK transfer mechanism (covering global Gemini processing, ADR 007), retention, DPIA. Then write the page and link it from onboarding, the trip form and the account menu.
+3. **Governance decisions and privacy page:** controller, lawful basis, UK transfer mechanism (covering US Gemini processing, ADR 009), retention, DPIA. Then write the page and link it from onboarding, the trip form and the account menu.
 4. **Abuse and cost controls:** rate limiting on `/api/adk` and `/api/places` (ADR 005), a Maps Platform budget alert, and quota caps.
 5. **Restore token binding** (ADR 008 follow-up): move the Firebase revocation check and `agent/tools/maps.py` to mTLS, then remove `GOOGLE_API_ENABLE_RUNTIME_BOUND_TOKEN=false`.
 6. **Reliability:** monitoring and alerts on agent errors and Places 4xx/5xx (see the Agent Runtime notes in docs), and min instances to avoid cold starts.
